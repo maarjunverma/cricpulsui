@@ -1,0 +1,12 @@
+# Frontend .dockerignore — keeps the Vite build image lean
+node_modules
+npm-debug.log*
+.npm
+dist
+.env
+.env.*
+!.env.example
+*.local
+.git
+.gitignore
+README.md
