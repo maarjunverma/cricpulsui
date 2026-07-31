@@ -18,12 +18,20 @@ RUN npm run build
 ###############################################################
 FROM nginx:1.27-alpine AS runner
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install envsubst (provided by gettext package)
+RUN apk add --no-cache gettext
+
+# Copy nginx config template (upstream URLs injected at runtime via envsubst)
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Copy built static files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+# Default fallback values — override in Coolify environment tab
+ENV PROXY_UPSTREAM=http://localhost:5000
+ENV STRAPI_UPSTREAM=http://localhost:1337
+
+# At startup: substitute env vars into template → write final nginx config → start nginx
+CMD ["/bin/sh", "-c", "envsubst '${PROXY_UPSTREAM} ${STRAPI_UPSTREAM}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
