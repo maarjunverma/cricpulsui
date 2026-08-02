@@ -1,10 +1,103 @@
 import React, { useState } from 'react';
-import { MOCK_RANKINGS } from '../data/mockMatches';
 import { Award, Shield, User } from 'lucide-react';
 
+// Static ICC rankings — replace with live API data when available
+const MOCK_RANKINGS = {
+  TEST: {
+    TEAMS: [
+      { rank: 1, team: 'Australia', points: 3116, rating: 130 },
+      { rank: 2, team: 'India', points: 3754, rating: 119 },
+      { rank: 3, team: 'England', points: 3501, rating: 110 },
+      { rank: 4, team: 'New Zealand', points: 2394, rating: 108 },
+      { rank: 5, team: 'South Africa', points: 2330, rating: 103 },
+    ],
+    BATTING: [
+      { rank: 1, name: 'Joe Root', team: 'England', rating: 897 },
+      { rank: 2, name: 'Steve Smith', team: 'Australia', rating: 861 },
+      { rank: 3, name: 'Marnus Labuschagne', team: 'Australia', rating: 843 },
+      { rank: 4, name: 'Rohit Sharma', team: 'India', rating: 820 },
+      { rank: 5, name: 'Kane Williamson', team: 'New Zealand', rating: 798 },
+    ],
+    BOWLING: [
+      { rank: 1, name: 'Jasprit Bumrah', team: 'India', rating: 883 },
+      { rank: 2, name: 'Pat Cummins', team: 'Australia', rating: 843 },
+      { rank: 3, name: 'Ravichandran Ashwin', team: 'India', rating: 820 },
+      { rank: 4, name: 'Josh Hazlewood', team: 'Australia', rating: 802 },
+      { rank: 5, name: 'Ben Stokes', team: 'England', rating: 756 },
+    ],
+    ALL_ROUNDERS: [
+      { rank: 1, name: 'Ravindra Jadeja', team: 'India', rating: 444 },
+      { rank: 2, name: 'Ben Stokes', team: 'England', rating: 410 },
+      { rank: 3, name: 'Shakib Al Hasan', team: 'Bangladesh', rating: 395 },
+      { rank: 4, name: 'Jason Holder', team: 'West Indies', rating: 345 },
+      { rank: 5, name: 'Cameron Green', team: 'Australia', rating: 315 },
+    ],
+  },
+  ODI: {
+    TEAMS: [
+      { rank: 1, team: 'India', points: 4680, rating: 120 },
+      { rank: 2, team: 'Australia', points: 3960, rating: 114 },
+      { rank: 3, team: 'England', points: 3672, rating: 108 },
+      { rank: 4, team: 'New Zealand', points: 3146, rating: 105 },
+      { rank: 5, team: 'South Africa', points: 2940, rating: 101 },
+    ],
+    BATTING: [
+      { rank: 1, name: 'Shubman Gill', team: 'India', rating: 890 },
+      { rank: 2, name: 'Virat Kohli', team: 'India', rating: 863 },
+      { rank: 3, name: 'Babar Azam', team: 'Pakistan', rating: 845 },
+      { rank: 4, name: 'Rohit Sharma', team: 'India', rating: 830 },
+      { rank: 5, name: 'Travis Head', team: 'Australia', rating: 810 },
+    ],
+    BOWLING: [
+      { rank: 1, name: 'Josh Hazlewood', team: 'Australia', rating: 850 },
+      { rank: 2, name: 'Jasprit Bumrah', team: 'India', rating: 830 },
+      { rank: 3, name: 'Adam Zampa', team: 'Australia', rating: 808 },
+      { rank: 4, name: 'Shaheen Afridi', team: 'Pakistan', rating: 792 },
+      { rank: 5, name: 'Trent Boult', team: 'New Zealand', rating: 780 },
+    ],
+    ALL_ROUNDERS: [
+      { rank: 1, name: 'Hardik Pandya', team: 'India', rating: 430 },
+      { rank: 2, name: 'Ravindra Jadeja', team: 'India', rating: 410 },
+      { rank: 3, name: 'Glenn Maxwell', team: 'Australia', rating: 395 },
+      { rank: 4, name: 'Marcus Stoinis', team: 'Australia', rating: 360 },
+      { rank: 5, name: 'Shakib Al Hasan', team: 'Bangladesh', rating: 340 },
+    ],
+  },
+  T20: {
+    TEAMS: [
+      { rank: 1, team: 'India', points: 9680, rating: 270 },
+      { rank: 2, team: 'England', points: 8240, rating: 258 },
+      { rank: 3, team: 'Australia', points: 7590, rating: 245 },
+      { rank: 4, team: 'South Africa', points: 6880, rating: 240 },
+      { rank: 5, team: 'West Indies', points: 6050, rating: 228 },
+    ],
+    BATTING: [
+      { rank: 1, name: 'Travis Head', team: 'Australia', rating: 840 },
+      { rank: 2, name: 'Suryakumar Yadav', team: 'India', rating: 826 },
+      { rank: 3, name: 'Phil Salt', team: 'England', rating: 794 },
+      { rank: 4, name: 'Yashasvi Jaiswal', team: 'India', rating: 780 },
+      { rank: 5, name: 'Jos Buttler', team: 'England', rating: 760 },
+    ],
+    BOWLING: [
+      { rank: 1, name: 'Jasprit Bumrah', team: 'India', rating: 820 },
+      { rank: 2, name: 'Rashid Khan', team: 'Afghanistan', rating: 808 },
+      { rank: 3, name: 'Adam Zampa', team: 'Australia', rating: 790 },
+      { rank: 4, name: 'Adil Rashid', team: 'England', rating: 774 },
+      { rank: 5, name: 'Josh Hazlewood', team: 'Australia', rating: 758 },
+    ],
+    ALL_ROUNDERS: [
+      { rank: 1, name: 'Hardik Pandya', team: 'India', rating: 440 },
+      { rank: 2, name: 'Liam Livingstone', team: 'England', rating: 420 },
+      { rank: 3, name: 'Marcus Stoinis', team: 'Australia', rating: 398 },
+      { rank: 4, name: 'Glenn Maxwell', team: 'Australia', rating: 375 },
+      { rank: 5, name: 'Ravindra Jadeja', team: 'India', rating: 355 },
+    ],
+  },
+};
+
 export default function RankingsPage({ onPlayerClick }) {
-  const [format, setFormat] = useState('T20'); // 'TEST', 'ODI', 'T20'
-  const [category, setCategory] = useState('TEAMS'); // 'TEAMS', 'BATTING', 'BOWLING', 'ALL_ROUNDERS'
+  const [format, setFormat] = useState('T20');
+  const [category, setCategory] = useState('TEAMS');
 
   const rankingsData = MOCK_RANKINGS[format][category];
 

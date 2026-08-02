@@ -5,7 +5,6 @@ import FixturesPage from './components/FixturesPage';
 import TeamsPage from './components/TeamsPage';
 import RankingsPage from './components/RankingsPage';
 import PlayerProfileModal from './components/PlayerProfileModal';
-import { INITIAL_LIVE_MATCHES, MOCK_FIXTURES, TEAMS } from './data/mockMatches';
 import { simulateBall } from './services/simulationEngine';
 import { setMute } from './services/audioService';
 import { getLiveMatches, getMatchDetails, transformCricbuzzToCricPuls } from './services/apiService';
@@ -34,9 +33,9 @@ const TOP_RANKINGS = {
 
 function App() {
   const [currentTab, setCurrentTab] = useState('live');
-  const [liveMatches, setLiveMatches] = useState(INITIAL_LIVE_MATCHES);
-  const [fixtures, setFixtures] = useState(MOCK_FIXTURES);
-  const [selectedMatchId, setSelectedMatchId] = useState('live_1');
+  const [liveMatches, setLiveMatches] = useState([]);   // filled by live API poll
+  const [fixtures, setFixtures] = useState([]);          // filled by live API poll
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
   const [simSpeed, setSimSpeed] = useState(5000);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -52,10 +51,6 @@ function App() {
   const handleToggleMode = () => {
     const nextMode = appMode === 'demo' ? 'live' : 'demo';
     setAppMode(nextMode);
-    if (nextMode === 'demo') {
-      setLiveMatches(JSON.parse(JSON.stringify(INITIAL_LIVE_MATCHES)));
-      setSelectedMatchId('live_1');
-    }
   };
 
   // Live API Polling Loop
@@ -114,27 +109,18 @@ function App() {
 
   // Reset scores back to default
   const handleResetMatches = () => {
-    setLiveMatches(JSON.parse(JSON.stringify(INITIAL_LIVE_MATCHES)));
-    setFixtures(JSON.parse(JSON.stringify(MOCK_FIXTURES)));
-    setSelectedMatchId('live_1');
+    setLiveMatches([]);
+    setFixtures([]);
+    setSelectedMatchId(null);
     setSimSpeed(5000);
     setSelectedPlayerId(null);
   };
 
   // Find selected match
-  const selectedMatch = liveMatches.find(m => m.id === selectedMatchId) || liveMatches[0];
+  const selectedMatch = liveMatches.find(m => m.id === selectedMatchId) || liveMatches[0] || null;
 
-  // Helper to lookup player object + team name for the profile modal
+  // Helper to lookup player object — returns null when no squads loaded
   const getPlayerDetails = (playerId) => {
-    if (!playerId) return { player: null, teamName: '' };
-    
-    for (const teamKey in TEAMS) {
-      const team = TEAMS[teamKey];
-      const player = team.squad.find(p => p.id === playerId);
-      if (player) {
-        return { player, teamName: team.name };
-      }
-    }
     return { player: null, teamName: '' };
   };
 
