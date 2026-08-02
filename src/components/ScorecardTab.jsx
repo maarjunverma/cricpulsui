@@ -19,8 +19,13 @@ export default function ScorecardTab({ match, onPlayerClick }) {
   const bowlingTeam = selectedInnings === 1 ? team2 : team1;
   const extras = selectedInnings === 1 ? score.team1.extra : score.team2.extra;
 
-  // Calculate fall of wickets
-  const fallOfWickets = battingData.filter(b => b.status !== 'Not out' && b.status !== 'yet to bat');
+  // Fall of wickets & Partnerships from API if available
+  const fowFromApi = selectedInnings === 1 ? match.fow?.team1 : match.fow?.team2;
+  const fallOfWickets = (fowFromApi && fowFromApi.length > 0)
+    ? fowFromApi.map(f => ({ id: f.id, name: f.name, runs: f.runs, status: `at ${f.over} ov` }))
+    : battingData.filter(b => b.status !== 'Not out' && b.status !== 'yet to bat' && b.status !== 'batting' && b.status !== '');
+
+  const partnershipsData = selectedInnings === 1 ? match.partnerships?.team1 : match.partnerships?.team2;
 
   return (
     <div style={styles.container} className="fade-in">
@@ -70,10 +75,10 @@ export default function ScorecardTab({ match, onPlayerClick }) {
               {battingData.map(player => (
                 <tr key={player.id}>
                   <td 
-                    onClick={() => onPlayerClick(player.id)} 
+                    onClick={() => onPlayerClick && onPlayerClick(player.id)} 
                     style={styles.playerLink}
                   >
-                    {player.name}
+                    {player.name} {player.iscaptain ? '(c)' : ''} {player.iskeeper ? '(wk)' : ''}
                   </td>
                   <td style={styles.dismissalText}>{player.status}</td>
                   <td style={{ ...styles.textRight, fontWeight: '700', color: '#fff' }}>{player.runs}</td>
@@ -81,7 +86,7 @@ export default function ScorecardTab({ match, onPlayerClick }) {
                   <td style={styles.textRight}>{player.fours}</td>
                   <td style={styles.textRight}>{player.sixes}</td>
                   <td style={{ ...styles.textRight, color: 'var(--text-secondary)' }}>
-                    {player.balls > 0 ? ((player.runs / player.balls) * 100).toFixed(1) : '0.0'}
+                    {player.strkrate || (player.balls > 0 ? ((player.runs / player.balls) * 100).toFixed(1) : '0.0')}
                   </td>
                 </tr>
               ))}
@@ -102,7 +107,16 @@ export default function ScorecardTab({ match, onPlayerClick }) {
             <div style={styles.summaryLine}>
               <span style={styles.summaryLabel}>Extras</span>
               <span style={styles.summaryVal}>
-                {extras} <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(wd {Math.round(extras*0.7)}, nb {Math.round(extras*0.3)})</span>
+                {typeof extras === 'object' ? (extras.total ?? 0) : extras}{' '}
+                {typeof extras === 'object' ? (
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>
+                    (b {extras.byes || 0}, lb {extras.legbyes || 0}, w {extras.wides || 0}, nb {extras.noballs || 0}, p {extras.penalty || 0})
+                  </span>
+                ) : (
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>
+                    (wd {Math.round((extras || 0)*0.7)}, nb {Math.round((extras || 0)*0.3)})
+                  </span>
+                )}
               </span>
             </div>
             <div style={styles.summaryLine}>
@@ -111,7 +125,7 @@ export default function ScorecardTab({ match, onPlayerClick }) {
                 {selectedInnings === 1 ? score.team1.runs : score.team2.runs}/
                 {selectedInnings === 1 ? score.team1.wickets : score.team2.wickets}
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>
-                  ({(selectedInnings === 1 ? score.team1.overs : score.team2.overs).toFixed(1)} Overs)
+                  ({typeof (selectedInnings === 1 ? score.team1.overs : score.team2.overs) === 'number' ? (selectedInnings === 1 ? score.team1.overs : score.team2.overs).toFixed(1) : (selectedInnings === 1 ? score.team1.overs : score.team2.overs)} Overs)
                 </span>
               </span>
             </div>
@@ -139,17 +153,19 @@ export default function ScorecardTab({ match, onPlayerClick }) {
                 {bowlingData.map(bowler => (
                   <tr key={bowler.id}>
                     <td 
-                      onClick={() => onPlayerClick(bowler.id)} 
+                      onClick={() => onPlayerClick && onPlayerClick(bowler.id)} 
                       style={styles.playerLink}
                     >
                       {bowler.name}
                     </td>
-                    <td style={{ ...styles.textRight, color: '#fff', fontWeight: '600' }}>{bowler.overs.toFixed(1)}</td>
+                    <td style={{ ...styles.textRight, color: '#fff', fontWeight: '600' }}>
+                      {typeof bowler.overs === 'number' ? bowler.overs.toFixed(1) : bowler.overs}
+                    </td>
                     <td style={styles.textRight}>{bowler.maidens}</td>
                     <td style={styles.textRight}>{bowler.runs}</td>
                     <td style={{ ...styles.textRight, color: 'var(--red-accent)', fontWeight: '700' }}>{bowler.wkts}</td>
                     <td style={{ ...styles.textRight, color: 'var(--emerald)' }}>
-                      {bowler.overs > 0 ? (bowler.runs / (Math.floor(bowler.overs) + (bowler.overs % 1) * 1.666)).toFixed(2) : '0.00'}
+                      {bowler.economy || (bowler.overs > 0 ? (bowler.runs / bowler.overs).toFixed(2) : '0.00')}
                     </td>
                   </tr>
                 ))}
@@ -172,11 +188,28 @@ export default function ScorecardTab({ match, onPlayerClick }) {
           <h4 style={styles.cardHeader}>Fall of Wickets</h4>
           <div style={styles.fowList}>
             {fallOfWickets.map((player, index) => (
-              <div key={player.id} style={styles.fowItem}>
+              <div key={player.id || index} style={styles.fowItem}>
                 <span style={styles.fowNum}>{index + 1}</span>
                 <div style={styles.fowDetails}>
                   <span style={styles.fowName}>{player.name}</span>
-                  <span style={styles.fowScore}>{player.runs} runs (b {player.status.split(' b ')[1] || 'bowled'})</span>
+                  <span style={styles.fowScore}>{player.runs} runs ({player.status})</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Partnerships */}
+      {partnershipsData && partnershipsData.length > 0 && (
+        <div style={styles.card} className="glass-card">
+          <h4 style={styles.cardHeader}>Partnerships</h4>
+          <div style={styles.fowList}>
+            {partnershipsData.map((p, index) => (
+              <div key={p.id || index} style={styles.fowItem}>
+                <div style={styles.fowDetails}>
+                  <span style={styles.fowName}>{p.bat1name} ({p.bat1runs}) &amp; {p.bat2name} ({p.bat2runs})</span>
+                  <span style={styles.fowScore}>{p.totalruns} runs ({p.totalballs} balls)</span>
                 </div>
               </div>
             ))}

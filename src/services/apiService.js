@@ -239,6 +239,91 @@ export function transformCricbuzzToCricPuls(rawMatch, details = null) {
     };
   }
 
+  // Full scorecard mapping from RapidAPI hscard data
+  let team1Scorecard = striker ? [{ ...striker, status: 'batting' }] : [];
+  let team2Scorecard = nonStriker ? [{ ...nonStriker, status: 'batting' }] : [];
+  let team1BowlersCard = [];
+  let team2BowlersCard = activeBowler ? [activeBowler] : [];
+
+  let score1 = { runs: t1Runs, wickets: t1Wkts, overs: t1Overs, extra: { total: 0, wides: 0, noballs: 0, legbyes: 0, byes: 0 } };
+  let score2 = { runs: t2Runs, wickets: t2Wkts, overs: t2Overs, extra: { total: 0, wides: 0, noballs: 0, legbyes: 0, byes: 0 } };
+
+  let fow1 = [];
+  let fow2 = [];
+  let partnerships1 = [];
+  let partnerships2 = [];
+
+  const rawScorecard = details?.scorecard || details?.scoreCard || [];
+  if (Array.isArray(rawScorecard) && rawScorecard.length > 0) {
+    rawScorecard.forEach((inngs, idx) => {
+      const batShort = (inngs.batteamsname || inngs.batteamname || '').toUpperCase();
+      const isTeam1 = batShort ? (batShort.includes(t1Short) || t1Short.includes(batShort)) : (inngs.inningsid === 1 || idx === 0);
+
+      const mappedBatsmen = (inngs.batsman || []).map((b) => ({
+        id: String(b.id || Math.random()),
+        name: b.name || b.nickname || 'Unknown',
+        status: b.outdec || (b.balls > 0 ? 'Not out' : 'yet to bat'),
+        runs: b.runs ?? 0,
+        balls: b.balls ?? 0,
+        fours: b.fours ?? 0,
+        sixes: b.sixes ?? 0,
+        strkrate: b.strkrate || (b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0'),
+        iscaptain: b.iscaptain || false,
+        iskeeper: b.iskeeper || false,
+      }));
+
+      const mappedBowlers = (inngs.bowler || []).map((bw) => ({
+        id: String(bw.id || Math.random()),
+        name: bw.name || bw.nickname || 'Unknown',
+        overs: typeof bw.overs === 'string' ? parseFloat(bw.overs) : (bw.overs ?? 0),
+        maidens: bw.maidens ?? 0,
+        runs: bw.runs ?? 0,
+        wkts: bw.wickets ?? bw.wkts ?? 0,
+        economy: bw.economy || (bw.overs > 0 ? (bw.runs / parseFloat(bw.overs)).toFixed(2) : '0.00'),
+        dots: bw.dots ?? 0,
+      }));
+
+      const inngsScore = {
+        runs: inngs.score ?? 0,
+        wickets: inngs.wickets ?? 0,
+        overs: typeof inngs.overs === 'string' ? parseFloat(inngs.overs) : (inngs.overs ?? 0),
+        runrate: inngs.runrate || 0,
+        extra: typeof inngs.extras === 'object' ? inngs.extras : { total: inngs.extras || 0 }
+      };
+
+      const inngsFow = (inngs.fow?.fow || []).map(f => ({
+        id: String(f.batsmanid || Math.random()),
+        name: f.batsmanname || 'Batsman',
+        runs: f.runs ?? 0,
+        over: f.overnbr ?? f.ballnbr ?? 0,
+      }));
+
+      const inngsPartnership = (inngs.partnership?.partnership || []).map(p => ({
+        id: String(p.id || Math.random()),
+        bat1name: p.bat1name,
+        bat1runs: p.bat1runs,
+        bat2name: p.bat2name,
+        bat2runs: p.bat2runs,
+        totalruns: p.totalruns,
+        totalballs: p.totalballs,
+      }));
+
+      if (isTeam1) {
+        team1Scorecard = mappedBatsmen;
+        team2BowlersCard = mappedBowlers; // Team 2 bowled in Innings 1
+        score1 = inngsScore;
+        fow1 = inngsFow;
+        partnerships1 = inngsPartnership;
+      } else {
+        team2Scorecard = mappedBatsmen;
+        team1BowlersCard = mappedBowlers; // Team 1 bowled in Innings 2
+        score2 = inngsScore;
+        fow2 = inngsFow;
+        partnerships2 = inngsPartnership;
+      }
+    });
+  }
+
   const commentaryList = (details?.commentary || []).map(c => ({
     ball: c.ball || '0.0',
     event: c.event || '0 runs',
@@ -254,47 +339,56 @@ export function transformCricbuzzToCricPuls(rawMatch, details = null) {
   }).reverse() : ['1', '0', '4', '1', '2', '0'];
 
   const winProb = isTeam1Batting ? 65 : 35;
-  const isFinished = rawMatch.status === 'FINISHED' || title.toLowerCase().includes('won by') || (scoreStr && scoreStr.toLowerCase().includes('won by'));
+  const matchStatus = details?.status || rawMatch.statusText || rawMatch.status || scoreStr;
+  const isFinished = details?.ismatchcomplete || rawMatch.status === 'FINISHED' || title.toLowerCase().includes('won by') || (matchStatus && matchStatus.toLowerCase().includes('won by'));
 
   return {
     id: String(rawMatch.id),
     title: title,
     venue: rawMatch.venue || 'Live Stadium',
     format: rawMatch.format || (title.toUpperCase().includes('T20') ? 'T20' : title.toUpperCase().includes('ODI') ? 'ODI' : 'TEST'),
-    status: rawMatch.statusText || rawMatch.status || scoreStr || (isFinished ? 'FINISHED' : 'LIVE'),
-    toss: rawMatch.statusText || 'Toss details inside commentary stream',
+    status: matchStatus || (isFinished ? 'FINISHED' : 'LIVE'),
+    toss: matchStatus || 'Toss details inside commentary stream',
     team1: {
       id: 't1',
       name: t1Name,
       shortName: t1Short,
       color: '#00529b',
-      squad: striker ? [{ id: striker.id, name: striker.name, role: 'Batsman' }] : []
+      squad: team1Scorecard.map(b => ({ id: b.id, name: b.name, role: 'Player' }))
     },
     team2: {
       id: 't2',
       name: t2Name,
       shortName: t2Short,
       color: '#ffcd00',
-      squad: activeBowler ? [{ id: activeBowler.id, name: activeBowler.name, role: 'Bowler' }] : []
+      squad: team2Scorecard.map(b => ({ id: b.id, name: b.name, role: 'Player' }))
     },
-    innings: isTeam1Batting ? 1 : 2,
+    innings: (rawScorecard.length >= 2 || !isTeam1Batting) ? 2 : 1,
     isFinished: isFinished,
     score: {
-      team1: { runs: t1Runs, wickets: t1Wkts, overs: t1Overs, extra: 0 },
-      team2: { runs: t2Runs, wickets: t2Wkts, overs: t2Overs, extra: 0 }
+      team1: score1,
+      team2: score2
     },
     batting: { striker, nonStriker },
     bowling: { active: activeBowler },
     scorecard: {
-      team1: striker ? [{ ...striker, status: 'batting' }] : [],
-      team2: nonStriker ? [{ ...nonStriker, status: 'batting' }] : []
+      team1: team1Scorecard,
+      team2: team2Scorecard
     },
     bowlersCard: {
-      team1: [],
-      team2: activeBowler ? [activeBowler] : []
+      team1: team1BowlersCard,
+      team2: team2BowlersCard
+    },
+    fow: {
+      team1: fow1,
+      team2: fow2
+    },
+    partnerships: {
+      team1: partnerships1,
+      team2: partnerships2
     },
     recentBalls,
-    commentary: commentaryList.length > 0 ? commentaryList : [{ ball: '0.0', event: 'Live', text: `${title}: ${rawMatch.statusText || scoreStr}` }],
+    commentary: commentaryList.length > 0 ? commentaryList : [{ ball: '0.0', event: 'Live', text: `${title}: ${matchStatus || scoreStr}` }],
     lastBall: null,
     odds: {
       back: (100 / winProb).toFixed(2),
