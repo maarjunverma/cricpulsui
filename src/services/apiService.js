@@ -1,8 +1,8 @@
 // Client API Service for CricPuls
 // Queries the Express proxy scraper server and transforms live match JSON feeds
 
-// Relative URL: resolved by Vite dev proxy (localhost:5000) or nginx upstream in production
-const BASE_URL = '/api';
+// Production API endpoint for CricPuls realtime data
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://craftflow.in/api';
 
 // Fetch current live matches list
 export async function getLiveMatches() {

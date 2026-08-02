@@ -61,45 +61,11 @@ export default function Header({
 
           {/* Right Controls */}
           <div style={styles.rightControls}>
-            {/* Mode Toggle */}
-            <button 
-              onClick={onToggleMode}
-              style={{
-                ...styles.modeToggleBtn,
-                ...(appMode === 'live' ? styles.modeToggleLive : styles.modeToggleDemo)
-              }}
-              title={appMode === 'live' ? "Switch to Demo Mode" : "Switch to Live Data"}
-            >
-              {appMode === 'live' && <span className="red-indicator" style={{ marginRight: '5px' }} />}
-              <span>{appMode === 'live' ? 'LIVE' : 'DEMO'}</span>
-            </button>
-
-            {/* Sim Speed (Demo only) */}
-            {appMode === 'demo' && (
-              <div style={styles.speedPill}>
-                <Zap size={12} color="#f59e0b" />
-                {[
-                  { speed: 0, label: <Pause size={10} /> },
-                  { speed: 5000, label: '1x' },
-                  { speed: 2000, label: '3x' },
-                  { speed: 500, label: '10x' },
-                ].map(({ speed, label }) => (
-                  <button
-                    key={speed}
-                    onClick={() => setSimSpeed(speed)}
-                    style={{
-                      ...styles.speedBtn,
-                      ...(simSpeed === speed ? styles.speedBtnActive : {})
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <button onClick={onResetMatches} style={styles.resetBtn} title="Reset Scores">
-                  <RefreshCw size={10} />
-                </button>
-              </div>
-            )}
+            {/* Live Data Badge */}
+            <div style={styles.liveBadge}>
+              <span className="red-indicator" style={{ marginRight: '6px' }} />
+              <span>LIVE DATA</span>
+            </div>
 
             {/* Mute Toggle */}
             <button 
@@ -414,6 +380,18 @@ const styles = {
     alignItems: 'center',
     borderRadius: '3px',
     transition: 'all 0.15s',
+  },
+  liveBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+    color: '#ef4444',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    letterSpacing: '0.5px',
   },
   iconBtn: {
     background: 'rgba(255,255,255,0.05)',

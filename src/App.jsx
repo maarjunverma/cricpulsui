@@ -40,7 +40,7 @@ function App() {
   const [simSpeed, setSimSpeed] = useState(5000);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
-  const [appMode, setAppMode] = useState('demo');
+  const [appMode, setAppMode] = useState('live');
   const [rankingFormat, setRankingFormat] = useState('ODI');
 
   const handleToggleMute = () => {
@@ -300,12 +300,12 @@ function App() {
               <div style={sidebarStyles.statRow}>
                 <span style={{ color: 'var(--text-muted)' }}>Mode</span>
                 <span style={{ 
-                  color: appMode === 'live' ? 'var(--red-accent)' : 'var(--amber)',
+                  color: 'var(--red-accent)',
                   fontWeight: '700',
                   fontSize: '0.75rem',
                   letterSpacing: '0.05em',
                 }}>
-                  {appMode === 'live' ? '● LIVE' : '◆ DEMO'}
+                  ● LIVE
                 </span>
               </div>
             </div>

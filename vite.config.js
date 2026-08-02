@@ -6,10 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // In dev, proxy /api → Express proxy server on port 5000
+      // In dev, proxy /api → production Strapi API endpoint
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://craftflow.in',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
