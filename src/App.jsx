@@ -65,33 +65,20 @@ function App() {
     let active = true;
 
     const pollLiveMatches = async () => {
-      console.log("Polling live Cricbuzz API from proxy...");
-      const rawMatchesList = await getLiveMatches();
+      console.log("Polling real-time live matches...");
+      const matchesList = await getLiveMatches();
       if (!active) return;
 
-      if (rawMatchesList && rawMatchesList.length > 0) {
-        const transformedList = await Promise.all(
-          rawMatchesList.slice(0, 5).map(async (rawMatch) => {
-            const matchId = rawMatch.id;
-            const details = await getMatchDetails(matchId);
-            return transformCricbuzzToCricPuls(rawMatch, details);
-          })
-        );
-        
-        if (!active) return;
-        
-        const cleanList = transformedList.filter(Boolean);
-        if (cleanList.length > 0) {
-          setLiveMatches(cleanList);
-          if (!cleanList.some(m => m.id === selectedMatchId)) {
-            setSelectedMatchId(cleanList[0].id);
-          }
-        }
+      if (matchesList && matchesList.length > 0) {
+        setLiveMatches(matchesList);
+        setSelectedMatchId(prevId => {
+          return matchesList.some(m => m.id === prevId) ? prevId : matchesList[0].id;
+        });
       }
     };
 
     pollLiveMatches();
-    const intervalId = setInterval(pollLiveMatches, 25000);
+    const intervalId = setInterval(pollLiveMatches, 15000);
 
     return () => {
       active = false;
