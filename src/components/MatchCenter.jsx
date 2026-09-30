@@ -18,23 +18,35 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
     );
   }
 
-  const { team1, team2, score, format, title, venue, status, toss, innings, isFinished } = match;
-  const t1Runs = score.team1.runs;
-  const t1Wkts = score.team1.wickets;
-  const t1Overs = score.team1.overs;
-  const t2Runs = score.team2.runs;
-  const t2Wkts = score.team2.wickets;
-  const t2Overs = score.team2.overs;
+  const team1 = match.team1 || { name: 'Team 1', shortName: 'TM1', color: '#00529b' };
+  const team2 = match.team2 || { name: 'Team 2', shortName: 'TM2', color: '#dc2626' };
+  const isUpcoming = match.category === 'upcoming' || match.status?.toUpperCase() === 'UPCOMING';
+  const isFinished = match.isFinished || match.category === 'finished' || match.status?.toUpperCase() === 'FINISHED';
+  const format = match.format || 'T20';
+  const title = match.title || `${team1.name || team1.shortName} vs ${team2.name || team2.shortName}`;
+  const venue = match.venue || 'Cricket Stadium';
+  const status = match.result || match.statusText || match.status || (isUpcoming ? (match.countdown || match.date || 'Scheduled') : isFinished ? (match.result || 'Finished') : 'Live');
+  const toss = match.toss || (isUpcoming ? 'Toss at match start' : isFinished ? (match.result || 'Match Completed') : 'Live match commentary stream');
+  const score = match.score || {};
+
+  const t1Runs = score?.team1?.runs ?? 0;
+  const t1Wkts = score?.team1?.wickets ?? 0;
+  const t1Overs = typeof score?.team1?.overs === 'number' ? score.team1.overs : (parseFloat(score?.team1?.overs) || 0);
+  const t2Runs = score?.team2?.runs ?? 0;
+  const t2Wkts = score?.team2?.wickets ?? 0;
+  const t2Overs = typeof score?.team2?.overs === 'number' ? score.team2.overs : (parseFloat(score?.team2?.overs) || 0);
+  const innings = match.innings || ((t2Runs > 0 || t2Overs > 0) ? 2 : 1);
 
   const calculateCRR = (runs, overs) => {
-    if (overs === 0) return '0.00';
+    if (!overs || overs === 0) return '0.00';
     const overInt = Math.floor(overs);
     const balls = overInt * 6 + Math.round((overs % 1) * 10);
+    if (!balls) return '0.00';
     return ((runs / balls) * 6).toFixed(2);
   };
 
   const calculateRRR = () => {
-    if (innings !== 2 || isFinished) return null;
+    if (innings !== 2 || isFinished || isUpcoming) return null;
     const maxOvers = format === 'T20' ? 20 : 50;
     const totalBalls = maxOvers * 6;
     const ballsBowled = Math.floor(t2Overs) * 6 + Math.round((t2Overs % 1) * 10);
@@ -97,23 +109,81 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
           <div style={styles.summaryContainer} className="fade-in">
             {/* Live Score Row */}
             <div style={styles.liveScoreRow}>
-              <div className="team-score-block" style={styles.teamScoreBlock}>
-                <div style={{ ...styles.teamAvatar, backgroundColor: team1.color }}>
-                  {team1.shortName.substring(0, 2)}
+              {isUpcoming ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '0.75rem', padding: '0.25rem 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ ...styles.teamAvatar, backgroundColor: team1.color || '#00529b' }}>
+                      {(team1.shortName || team1.name || 'T1').substring(0, 2)}
+                    </div>
+                    <div>
+                      <span style={styles.teamNameText}>{team1.name || team1.shortName}</span>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{team1.shortName}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'center', padding: '5px 14px', borderRadius: '20px', background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.3)' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--teal)', fontWeight: '700' }}>
+                      {match.countdown || match.date || 'UPCOMING MATCH'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={styles.teamNameText}>{team2.name || team2.shortName}</span>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{team2.shortName}</div>
+                    </div>
+                    <div style={{ ...styles.teamAvatar, backgroundColor: team2.color || '#dc2626' }}>
+                      {(team2.shortName || team2.name || 'T2').substring(0, 2)}
+                    </div>
+                  </div>
                 </div>
-                <span style={styles.teamNameText}>{team1.shortName}</span>
-                <span className="score-value-text" style={styles.scoreValue}>{t1Runs}-{t1Wkts}</span>
-                <span style={styles.oversValue}>({t1Overs.toFixed(1)})</span>
-              </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+                  {/* Team 1 Score Block */}
+                  <div className="team-score-block" style={styles.teamScoreBlock}>
+                    <div style={{ ...styles.teamAvatar, backgroundColor: team1.color || '#00529b' }}>
+                      {(team1.shortName || team1.name || 'T1').substring(0, 2)}
+                    </div>
+                    <span style={styles.teamNameText}>{team1.shortName || team1.name}</span>
+                    <span className="score-value-text" style={styles.scoreValue}>
+                      {score.team1 ? `${t1Runs}-${t1Wkts}` : (isFinished ? '—' : `${t1Runs}-${t1Wkts}`)}
+                    </span>
+                    {score.team1 && (
+                      <span style={styles.oversValue}>({typeof t1Overs === 'number' ? t1Overs.toFixed(1) : t1Overs})</span>
+                    )}
+                  </div>
+
+                  {/* Team 2 Score Block (shown for finished matches or 2nd innings) */}
+                  {(score.team2 || isFinished || innings === 2) && (
+                    <div className="team-score-block" style={styles.teamScoreBlock}>
+                      <div style={{ ...styles.teamAvatar, backgroundColor: team2.color || '#dc2626' }}>
+                        {(team2.shortName || team2.name || 'T2').substring(0, 2)}
+                      </div>
+                      <span style={styles.teamNameText}>{team2.shortName || team2.name}</span>
+                      <span className="score-value-text" style={styles.scoreValue}>
+                        {score.team2 ? `${t2Runs}-${t2Wkts}` : 'Yet to bat'}
+                      </span>
+                      {score.team2 && (
+                        <span style={styles.oversValue}>({typeof t2Overs === 'number' ? t2Overs.toFixed(1) : t2Overs})</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Status Text */}
             <div style={styles.statusBar}>
-              {!isFinished && <span className="pulse-indicator" style={{ marginRight: '6px' }} />}
-              <span style={styles.statusText}>{status}</span>
+              {!isFinished && !isUpcoming && <span className="pulse-indicator" style={{ marginRight: '6px' }} />}
+              <span style={{
+                ...styles.statusText,
+                color: isFinished ? 'var(--amber)' : isUpcoming ? 'var(--teal)' : 'var(--emerald)'
+              }}>
+                {match.result || match.statusText || status}
+              </span>
             </div>
 
-            {/* Batsmen Table */}
+            {/* Batsmen Table (when match has active batsmen) */}
             {(striker || nonStriker) && (
               <div className="summary-table-wrapper" style={styles.summaryTableWrapper}>
                 <table>
@@ -158,7 +228,7 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
               <div className="summary-table-wrapper" style={styles.summaryTableWrapper}>
                 <table>
                   <thead>
-                    <tr style={styles.tableHeaderRowBowl}>
+                    <tr style={styles.tableHeaderRow}>
                       <th style={styles.thBatter}>{getUIText('bowler', appLanguage)}</th>
                       <th style={styles.thNum}>{getUIText('overs', appLanguage)}</th>
                       <th style={styles.thNum}>{getUIText('maidens', appLanguage)}</th>
@@ -181,15 +251,34 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
               </div>
             )}
 
+            {/* Overview Banner for matches without active batsmen (Upcoming or Finished) */}
+            {(!striker && !nonStriker) && (
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                padding: '1rem',
+                textAlign: 'center',
+                color: 'var(--text-secondary)',
+                fontSize: '0.88rem'
+              }}>
+                {isUpcoming 
+                  ? `Match scheduled to be played at ${venue}. Check the Info and Fantasy tabs for match details and predicted XI.`
+                  : (match.result || 'Match Completed. Switch to Scorecard tab for full batting and bowling figures.')}
+              </div>
+            )}
+
             {/* Key Stats + Recent Balls Row */}
             <div className="stats-row-grid" style={styles.statsRow}>
               {/* Key Stats */}
               <div style={styles.keyStatsCard}>
                 <div style={styles.keyStatsHeader}>{getUIText('keyStats', appLanguage)}</div>
-                <div style={styles.statItem}>
-                  <span style={styles.statLabel}>CRR:</span>
-                  <span style={{ ...styles.statVal, color: 'var(--emerald)' }}>{crr}</span>
-                </div>
+                {!isUpcoming && (
+                  <div style={styles.statItem}>
+                    <span style={styles.statLabel}>CRR:</span>
+                    <span style={{ ...styles.statVal, color: 'var(--emerald)' }}>{crr}</span>
+                  </div>
+                )}
                 {rrr && (
                   <div style={styles.statItem}>
                     <span style={styles.statLabel}>RRR:</span>
@@ -197,25 +286,39 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
                   </div>
                 )}
                 <div style={styles.statItem}>
-                  <span style={styles.statLabel}>{getUIText('toss', appLanguage)}:</span>
-                  <span style={styles.statVal}>{toss}</span>
+                  <span style={styles.statLabel}>{isUpcoming ? 'Status:' : `${getUIText('toss', appLanguage)}:`}</span>
+                  <span style={styles.statVal}>{isUpcoming ? (match.countdown || match.date || 'Scheduled') : toss}</span>
                 </div>
+                {isUpcoming && match.time && (
+                  <div style={styles.statItem}>
+                    <span style={styles.statLabel}>Time:</span>
+                    <span style={{ ...styles.statVal, color: 'var(--teal)' }}>{match.time}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Recent Balls */}
+              {/* Recent Balls or Venue Info */}
               <div style={styles.recentBallsCard}>
-                <span style={styles.recentLabel}>{getUIText('recent', appLanguage)}:</span>
-                <div style={styles.ballsRow}>
-                  {recentBalls.map((ball, i) => {
-                    let className = 'ball-circle';
-                    if (ball === 'W') className += ' wicket';
-                    else if (ball === '4') className += ' four';
-                    else if (ball === '6') className += ' six';
-                    return (
-                      <span key={i} className={className}>{ball}</span>
-                    );
-                  })}
-                </div>
+                <span style={styles.recentLabel}>{isUpcoming ? 'Venue & Format:' : `${getUIText('recent', appLanguage)}:`}</span>
+                {isUpcoming ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    <span>{venue}</span>
+                    <span style={{ color: 'var(--teal)', fontWeight: '600' }}>Format: {format}</span>
+                  </div>
+                ) : (
+                  <div style={styles.ballsRow}>
+                    {recentBalls.map((ball, i) => {
+                      let className = 'ball-circle';
+                      if (ball === 'W') className += ' wicket';
+                      else if (ball === '4') className += ' four';
+                      else if (ball === '6') className += ' six';
+                      return (
+                        <span key={i} className={className}>{ball}</span>
+                      );
+                    })}
+                    {recentBalls.length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{status}</span>}
+                  </div>
+                )}
               </div>
             </div>
           </div>

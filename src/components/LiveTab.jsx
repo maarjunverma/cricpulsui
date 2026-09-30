@@ -134,7 +134,7 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
     );
   }
 
-  const { batting, bowling, recentBalls, commentary = [] } = match;
+  const { batting, bowling, recentBalls = [], commentary = [] } = match;
   const winProbability = match.winProbability ?? 50;
   const striker = batting?.striker;
   const nonStriker = batting?.nonStriker;
@@ -279,17 +279,17 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
         </div>
 
         {/* Win Probability Bar */}
-        {winProbability !== undefined && (
+        {winProbability !== undefined && match.team1 && match.team2 && (
           <div style={styles.probCard} className="glass-card">
             <div style={styles.probLabelRow}>
-              <span style={{ fontWeight: '700', color: match.team1.color }}>
-                {match.team1.shortName} ({winProbability}%)
+              <span style={{ fontWeight: '700', color: match.team1.color || 'var(--teal)' }}>
+                {match.team1.shortName || match.team1.name || 'T1'} ({winProbability}%)
               </span>
               <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
                 {getUIText('winProbability', appLanguage)}
               </span>
-              <span style={{ fontWeight: '700', color: match.team2.color }}>
-                {match.team2.shortName} ({100 - winProbability}%)
+              <span style={{ fontWeight: '700', color: match.team2.color || 'var(--amber)' }}>
+                {match.team2.shortName || match.team2.name || 'T2'} ({100 - winProbability}%)
               </span>
             </div>
             <div style={styles.barOuter}>
@@ -297,14 +297,14 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
                 style={{ 
                   ...styles.barInnerTeam1, 
                   width: `${winProbability}%`,
-                  background: match.team1.color 
+                  background: match.team1.color || 'var(--teal)'
                 }}
               />
               <div 
                 style={{ 
                   ...styles.barInnerTeam2, 
                   width: `${100 - winProbability}%`,
-                  background: match.team2.color 
+                  background: match.team2.color || 'var(--amber)'
                 }}
               />
             </div>

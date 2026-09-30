@@ -2,8 +2,24 @@ import React, { useState, useMemo } from 'react';
 import { BarChart2, TrendingUp, Users } from 'lucide-react';
 
 export default function AnalyticsTab({ match }) {
-  const { team1, team2, score, scorecard, bowlersCard, innings, isFinished } = match;
+  const { team1 = {}, team2 = {}, score = {}, scorecard = {}, bowlersCard = {}, innings, isFinished } = match || {};
   const [chartType, setChartType] = useState('worm'); // 'worm' or 'manhattan'
+
+  if (match?.category === 'upcoming' || !score?.team1) {
+    return (
+      <div style={styles.container} className="fade-in">
+        <div style={styles.card} className="glass-card">
+          <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📊</div>
+            <h3 style={{ color: '#fff', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Match Analytics Pending</h3>
+            <p style={{ maxWidth: '440px', margin: '0 auto', fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+              Worm charts, Manhattan graphs, run rate progressions, and live partnership analytics will be plotted once play gets underway.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Deterministic LCG random number generator to make charts stable for a match
   const seedRandom = (str) => {
@@ -88,24 +104,24 @@ export default function AnalyticsTab({ match }) {
 
     const t1History = generateInningsHistory(
       'team1',
-      team1.name,
+      team1.name || 'Team 1',
       0,
-      score.team1.wickets,
-      score.team1.overs,
-      score.team1.runs
+      score.team1?.wickets || 0,
+      score.team1?.overs || 0,
+      score.team1?.runs || 0
     );
 
     const t2History = generateInningsHistory(
       'team2',
-      team2.name,
-      score.team1.runs,
-      score.team2.wickets,
-      score.team2.overs,
-      score.team2.runs
+      team2.name || 'Team 2',
+      score.team1?.runs || 0,
+      score.team2?.wickets || 0,
+      score.team2?.overs || 0,
+      score.team2?.runs || 0
     );
 
     return { team1: t1History, team2: t2History };
-  }, [match.id, score.team1.runs, score.team1.overs, score.team1.wickets, score.team2.runs, score.team2.overs, score.team2.wickets]);
+  }, [match.id, score?.team1?.runs, score?.team1?.overs, score?.team1?.wickets, score?.team2?.runs, score?.team2?.overs, score?.team2?.wickets]);
 
   // Calculate current partnership details
   const partnershipInfo = useMemo(() => {

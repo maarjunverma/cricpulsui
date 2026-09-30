@@ -75,7 +75,7 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
               {format}
             </span>
             <span style={styles.tournamentText}>
-              {match.title.split(' - ')[0] || 'Match Preview'}
+              {match?.title?.split(' - ')[0] || match?.title || 'Match Preview'}
             </span>
           </div>
           <button 

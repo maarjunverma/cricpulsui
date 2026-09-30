@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Sparkles, Swords, Trophy, Compass } from 'lucide-react';
 
 export default function FantasyTab({ match }) {
-  const { team1, team2, score, innings, isFinished } = match;
+  const { team1 = {}, team2 = {}, score = {}, innings, isFinished } = match || {};
 
   // Generate Fantasy Dream XI based on player career ratings and live performance
   const fantasySquad = useMemo(() => {
@@ -10,24 +10,25 @@ export default function FantasyTab({ match }) {
     
     // Combine squads and calculate a "fantasy rating"
     const processSquad = (team, oppositeTeam) => {
-      team.squad.forEach(player => {
+      const squad = team?.squad || [];
+      squad.forEach(player => {
         let livePoints = 0;
         
         // Check if player has live stats in scorecard
-        const scorecardPlayer = match.scorecard.team1.find(p => p.id === player.id) || 
-                                match.scorecard.team2.find(p => p.id === player.id);
+        const scorecardPlayer = (match?.scorecard?.team1 || []).find(p => p.id === player.id) || 
+                                (match?.scorecard?.team2 || []).find(p => p.id === player.id);
         if (scorecardPlayer) {
-          livePoints += scorecardPlayer.runs * 1;
-          livePoints += scorecardPlayer.fours * 1;
-          livePoints += scorecardPlayer.sixes * 2;
+          livePoints += (scorecardPlayer.runs || 0) * 1;
+          livePoints += (scorecardPlayer.fours || 0) * 1;
+          livePoints += (scorecardPlayer.sixes || 0) * 2;
         }
 
         // Check if player has bowling stats
-        const bowlerPlayer = match.bowlersCard.team1.find(p => p.id === player.id) ||
-                             match.bowlersCard.team2.find(p => p.id === player.id);
+        const bowlerPlayer = (match?.bowlersCard?.team1 || []).find(p => p.id === player.id) ||
+                             (match?.bowlersCard?.team2 || []).find(p => p.id === player.id);
         if (bowlerPlayer) {
-          livePoints += bowlerPlayer.wkts * 25;
-          livePoints += bowlerPlayer.maidens * 8;
+          livePoints += (bowlerPlayer.wkts || 0) * 25;
+          livePoints += (bowlerPlayer.maidens || 0) * 8;
         }
 
         // Base rating from career stats
@@ -37,8 +38,8 @@ export default function FantasyTab({ match }) {
 
         allPlayers.push({
           ...player,
-          teamShort: team.shortName,
-          teamColor: team.color,
+          teamShort: team?.shortName || team?.name || 'T1',
+          teamColor: team?.color || '#00529b',
           fantasyPoints: 20 + livePoints + Math.round(baseRating / 3),
           rawScore: baseRating
         });
@@ -70,11 +71,11 @@ export default function FantasyTab({ match }) {
     if (dreamXI[1]) dreamXI[1].badge = 'VC'; // Vice Captain
 
     return dreamXI;
-  }, [team1, team2, match.scorecard, match.bowlersCard]);
+  }, [team1, team2, match?.scorecard, match?.bowlersCard]);
 
   // Static key matchups for visual interest
   const matchups = useMemo(() => {
-    if (team1.shortName === 'IND' || team2.shortName === 'IND') {
+    if (team1?.shortName === 'IND' || team2?.shortName === 'IND') {
       return [
         {
           batsman: 'Virat Kohli',
@@ -113,23 +114,32 @@ export default function FantasyTab({ match }) {
 
   // Projected score calculations
   const calculateProjections = () => {
-    const isT20 = match.format === 'T20';
+    if (match?.category === 'upcoming' || !score?.team1) {
+      return { 
+        label: 'Match Status', 
+        value: match?.countdown || (match?.date && match?.time ? `${match.date} • ${match.time}` : 'Scheduled') 
+      };
+    }
+    const isT20 = match?.format === 'T20';
     const totalOvers = isT20 ? 20 : 50;
 
     if (innings === 1) {
-      const curOvers = score.team1.overs;
-      const runs = score.team1.runs;
+      const curOvers = score.team1?.overs || 0;
+      const runs = score.team1?.runs || 0;
       const rr = curOvers > 0 ? runs / curOvers : 7.5;
       const projectedMin = Math.round(rr * totalOvers - 5);
       const projectedMax = Math.round(rr * totalOvers + 10);
       return { label: 'Projected 1st Inn Score', value: `${projectedMin} - ${projectedMax}` };
     } else {
       if (isFinished) {
-        return { label: 'Match Result', value: match.status.split(' - ')[1] || 'Completed' };
+        return { 
+          label: 'Match Result', 
+          value: match?.result || (typeof match?.status === 'string' ? match.status.split(' - ')[1] : '') || 'Completed' 
+        };
       }
-      const runsNeeded = score.team1.runs + 1 - score.team2.runs;
-      const curOvers = score.team2.overs;
-      const ballsRemaining = (totalOvers - curOvers) * 6;
+      const runsNeeded = (score.team1?.runs || 0) + 1 - (score.team2?.runs || 0);
+      const curOvers = score.team2?.overs || 0;
+      const ballsRemaining = Math.max(0, (totalOvers - curOvers) * 6);
       return { label: 'Required Runs', value: `${runsNeeded} needed off ${Math.round(ballsRemaining)} balls` };
     }
   };

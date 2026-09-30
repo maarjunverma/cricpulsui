@@ -256,7 +256,6 @@ export default function Header({
             <span style={styles.logoText} className="logo-text">
               CRIC<span style={styles.logoHighlight}>AI</span>
             </span>
-            <span className="brand-ai-badge">AI 2.0</span>
           </div>
 
           {/* Desktop Nav Links */}
@@ -286,27 +285,6 @@ export default function Header({
 
           {/* Right Controls */}
           <div style={styles.rightControls}>
-            {/* App Language Switcher (EN | HI) */}
-            <div className="app-language-toggle">
-              <button
-                type="button"
-                className={`lang-opt-btn ${appLanguage === 'en' ? 'active' : ''}`}
-                onClick={() => onLanguageChange && onLanguageChange('en')}
-                title="Switch app language to English"
-              >
-                EN
-              </button>
-              <span className="lang-divider">|</span>
-              <button
-                type="button"
-                className={`lang-opt-btn ${appLanguage === 'hi' ? 'active' : ''}`}
-                onClick={() => onLanguageChange && onLanguageChange('hi')}
-                title="Switch app language to Hindi (हिंदी)"
-              >
-                HI
-              </button>
-            </div>
-
             {/* Mobile menu toggle */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -532,13 +510,8 @@ export default function Header({
                     <div
                       key={match.id}
                       onClick={() => {
-                        if (isLive || isFinished) {
-                          setSelectedMatchId(match.id);
-                          setCurrentTab('live');
-                        } else {
-                          if (setFixturesSubTab) setFixturesSubTab('upcoming');
-                          setCurrentTab('fixtures');
-                        }
+                        setSelectedMatchId(match.id);
+                        setCurrentTab('live');
                       }}
                       className={`score-card ${isSelected ? 'selected' : ''}`}
                       style={{
@@ -652,7 +625,7 @@ export default function Header({
 
     {/* ─── Mobile App Bottom Navigation Bar ─── */}
     <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
-      {navItems.map(item => {
+      {navItems.filter(item => item.key !== 'series').map(item => {
         const Icon = item.icon;
         const isActive = currentTab === item.key;
         return (

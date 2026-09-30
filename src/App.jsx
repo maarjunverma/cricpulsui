@@ -115,7 +115,8 @@ function App() {
         if (matchesList && matchesList.length > 0) {
           setLiveMatches(matchesList);
           setSelectedMatchId(prevId => {
-            return matchesList.some(m => m.id === prevId) ? prevId : matchesList[0].id;
+            if (prevId) return prevId;
+            return matchesList[0]?.id || null;
           });
           hasLive = matchesList.some(m => m.status === 'LIVE' && !m.isFinished);
         }
@@ -148,18 +149,24 @@ function App() {
     let active = true;
     let detailTimer = null;
 
-    const currentMatch = liveMatches.find(m => m.id === selectedMatchId);
-    const isLive = currentMatch ? (!currentMatch.isFinished && currentMatch.status === 'LIVE') : true;
+    const currentMatch = liveMatches.find(m => String(m.id) === String(selectedMatchId));
+    const isLive = currentMatch ? (!currentMatch.isFinished && currentMatch.status === 'LIVE') : false;
 
     const fetchDetail = async () => {
       try {
         const details = await getMatchDetails(selectedMatchId);
         if (active && details) {
           setLiveMatches(prev => prev.map(m => {
-            if (m.id === selectedMatchId) {
+            if (String(m.id) === String(selectedMatchId)) {
               return transformCricbuzzToCricPuls(m, details);
             }
             return m;
+          }));
+          setFixtures(prev => prev.map(f => {
+            if (String(f.id) === String(selectedMatchId)) {
+              return transformCricbuzzToCricPuls(f, details);
+            }
+            return f;
           }));
         }
       } catch (err) {
@@ -214,8 +221,17 @@ function App() {
     setSelectedPlayerId(null);
   };
 
-  // Find selected match
-  const selectedMatch = liveMatches.find(m => m.id === selectedMatchId) || liveMatches[0] || null;
+  // Combine all matches so selectedMatch can resolve live, finished, or upcoming matches!
+  const allMatchesCombined = [
+    ...liveMatches,
+    ...fixtures.filter(f => !liveMatches.some(lm => String(lm.id) === String(f.id)))
+  ];
+
+  // Find selected match from ALL sources (live matches, finished fixtures, upcoming)
+  const selectedMatch = allMatchesCombined.find(m => String(m.id) === String(selectedMatchId)) 
+    || liveMatches[0] 
+    || fixtures[0] 
+    || null;
 
   // Helper to lookup player object — returns null when no squads loaded
   const getPlayerDetails = (playerId) => {

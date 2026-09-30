@@ -1,31 +1,54 @@
 import React, { useState } from 'react';
 
 export default function ScorecardTab({ match, onPlayerClick }) {
-  const { team1, team2, scorecard, bowlersCard, score, innings, isFinished } = match;
+  const { team1 = {}, team2 = {}, scorecard = {}, bowlersCard = {}, score = {}, innings, isFinished } = match || {};
   const [selectedInnings, setSelectedInnings] = useState(1);
+
+  if (match?.category === 'upcoming' || !score?.team1) {
+    return (
+      <div style={styles.card} className="glass-card">
+        <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🏏</div>
+          <h3 style={{ color: '#fff', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Match Scheduled</h3>
+          <p style={{ maxWidth: '440px', margin: '0 auto', fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+            The full ball-by-ball batting and bowling scorecard will be updated in real time as soon as the match commences.
+          </p>
+          {match?.venue && (
+            <div style={{ marginTop: '1.25rem', fontSize: '0.85rem', color: 'var(--emerald)', fontWeight: '600' }}>
+              📍 {match.venue}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const getInningsScore = (num) => {
     if (num === 1) {
-      return `${score.team1.runs}/${score.team1.wickets} (${score.team1.overs.toFixed(1)} Ov)`;
+      if (!score?.team1) return 'Yet to bat';
+      const ov = typeof score.team1.overs === 'number' ? score.team1.overs.toFixed(1) : (score.team1.overs || '0.0');
+      return `${score.team1.runs ?? 0}/${score.team1.wickets ?? 0} (${ov} Ov)`;
     } else {
-      if (innings === 1 && !isFinished) return 'Yet to bat';
-      return `${score.team2.runs}/${score.team2.wickets} (${score.score && score.team2.overs ? score.team2.overs.toFixed(1) : score.team2.overs} Ov)`;
+      if (innings === 1 && !isFinished && (!score?.team2 || score.team2.runs === 0)) return 'Yet to bat';
+      if (!score?.team2) return 'Yet to bat';
+      const ov = typeof score.team2.overs === 'number' ? score.team2.overs.toFixed(1) : (score.team2.overs || '0.0');
+      return `${score.team2.runs ?? 0}/${score.team2.wickets ?? 0} (${ov} Ov)`;
     }
   };
 
-  const battingData = selectedInnings === 1 ? scorecard.team1 : scorecard.team2;
-  const bowlingData = selectedInnings === 1 ? bowlersCard.team1 : bowlersCard.team2;
+  const battingData = (selectedInnings === 1 ? scorecard?.team1 : scorecard?.team2) || [];
+  const bowlingData = (selectedInnings === 1 ? bowlersCard?.team1 : bowlersCard?.team2) || [];
   const battingTeam = selectedInnings === 1 ? team1 : team2;
   const bowlingTeam = selectedInnings === 1 ? team2 : team1;
-  const extras = selectedInnings === 1 ? score.team1.extra : score.team2.extra;
+  const extras = (selectedInnings === 1 ? score?.team1?.extra : score?.team2?.extra) || 0;
 
   // Fall of wickets & Partnerships from API if available
-  const fowFromApi = selectedInnings === 1 ? match.fow?.team1 : match.fow?.team2;
+  const fowFromApi = selectedInnings === 1 ? match?.fow?.team1 : match?.fow?.team2;
   const fallOfWickets = (fowFromApi && fowFromApi.length > 0)
     ? fowFromApi.map(f => ({ id: f.id, name: f.name, runs: f.runs, status: `at ${f.over} ov` }))
     : battingData.filter(b => b.status !== 'Not out' && b.status !== 'yet to bat' && b.status !== 'batting' && b.status !== '');
 
-  const partnershipsData = selectedInnings === 1 ? match.partnerships?.team1 : match.partnerships?.team2;
+  const partnershipsData = selectedInnings === 1 ? match?.partnerships?.team1 : match?.partnerships?.team2;
 
   return (
     <div style={styles.container} className="fade-in">
