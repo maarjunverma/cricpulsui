@@ -1,6 +1,7 @@
-// Centralized UI Translations for CricPuls (English and Hindi)
+// Centralized UI Translations for CricAi (English and Hindi)
 export const UI_TRANSLATIONS = {
   en: {
+    appName: 'CricAi',
     // Navigation
     home: 'Home',
     schedule: 'Schedule',
@@ -78,6 +79,7 @@ export const UI_TRANSLATIONS = {
     high: 'High',
   },
   hi: {
+    appName: 'क्रिकएआई',
     // Navigation
     home: 'होम',
     schedule: 'शेड्यूल',

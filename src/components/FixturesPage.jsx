@@ -58,11 +58,11 @@ export default function FixturesPage({
 
   return (
     <div style={styles.container} className="fade-in">
-      <div style={styles.headerRow}>
+      <div className="header-row-responsive" style={styles.headerRow}>
         <h2 style={styles.title}>Cricket Fixtures & Schedule</h2>
         
         {/* Inner sub tabs */}
-        <div style={styles.subTabs}>
+        <div className="subtabs-responsive" style={styles.subTabs}>
           <button 
             onClick={() => setSubTab('live')} 
             style={{...styles.subTabBtn, ...(subTab === 'live' ? styles.subTabBtnActive : {})}}
@@ -85,7 +85,7 @@ export default function FixturesPage({
       </div>
 
       {/* Cards Grid */}
-      <div style={styles.grid}>
+      <div className="fixtures-grid" style={styles.grid}>
         {filteredMatches.map(match => {
           const formatColor = getFormatBadgeColor(match.format);
           const formatTextColor = getFormatTextColor(match.format);

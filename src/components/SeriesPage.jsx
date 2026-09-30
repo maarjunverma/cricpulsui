@@ -180,7 +180,7 @@ export default function SeriesPage({ onSelectMatch, setCurrentTab }) {
       </div>
 
       {/* ─── 2-Column Series Layout ─── */}
-      <div style={styles.layoutGrid}>
+      <div className="series-layout-grid" style={styles.layoutGrid}>
         {/* Left List of Series */}
         <div style={styles.seriesList}>
           {filteredSeries.map(s => {

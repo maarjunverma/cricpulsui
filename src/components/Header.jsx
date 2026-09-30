@@ -244,6 +244,7 @@ export default function Header({
   const filterChips = ['all', 'live', 'upcoming', 'finished'];
 
   return (
+    <>
     <header style={styles.headerWrapper} className="full-width-section">
       {/* ─── Top Navbar ─── */}
       <div style={styles.navbar}>
@@ -251,15 +252,16 @@ export default function Header({
           {/* Logo */}
           <div style={styles.logoContainer} onClick={() => { setCurrentTab('live'); setMobileMenuOpen(false); }}>
             <div style={styles.logoIcon}>
-              <Activity size={20} color="#10b981" />
+              <Zap size={20} color="#10b981" />
             </div>
             <span style={styles.logoText}>
-              CRIC<span style={styles.logoHighlight}>PULS</span>
+              CRIC<span style={styles.logoHighlight}>AI</span>
             </span>
+            <span className="brand-ai-badge">AI 2.0</span>
           </div>
 
           {/* Desktop Nav Links */}
-          <nav style={styles.desktopNav}>
+          <nav className="desktop-nav" style={styles.desktopNav}>
             {navItems.map(item => {
               const isActive = currentTab === item.key;
               return (
@@ -309,7 +311,9 @@ export default function Header({
             {/* Mobile menu toggle */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="mobile-menu-btn"
               style={styles.mobileMenuBtn}
+              aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -415,6 +419,7 @@ export default function Header({
                         setCurrentTab('fixtures');
                       }
                     }}
+                    className={`ticker-item ${isSelected ? 'active' : ''}`}
                     style={{
                       ...styles.tickerItem,
                       ...(isSelected ? styles.tickerItemActive : {})
@@ -536,6 +541,7 @@ export default function Header({
                           setCurrentTab('fixtures');
                         }
                       }}
+                      className={`score-card ${isSelected ? 'selected' : ''}`}
                       style={{
                         ...styles.scoreCard,
                         ...(isSelected ? styles.scoreCardSelected : {}),
@@ -645,6 +651,36 @@ export default function Header({
         </div>
       </div>
     </header>
+
+    {/* ─── Mobile App Bottom Navigation Bar ─── */}
+    <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
+      {navItems.map(item => {
+        const Icon = item.icon;
+        const isActive = currentTab === item.key;
+        return (
+          <button
+            key={`mobile-bottom-${item.key}`}
+            className={`mobile-bottom-nav-item ${isActive ? 'active' : ''}`}
+            onClick={() => {
+              if (item.key === 'fixtures' && setFixturesSubTab) {
+                setFixturesSubTab('upcoming');
+              }
+              setCurrentTab(item.key);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            title={item.label}
+            aria-label={item.label}
+          >
+            <div className="mobile-bottom-icon-wrap">
+              <Icon size={20} />
+              {item.key === 'live' && <span className="mobile-live-dot" />}
+            </div>
+            <span className="mobile-bottom-nav-label">{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+    </>
   );
 }
 

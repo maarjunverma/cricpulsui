@@ -144,7 +144,7 @@ export default function FantasyTab({ match }) {
         <div style={styles.card} className="glass-card">
           <div style={styles.cardHeader}>
             <Compass size={16} color="var(--amber)" />
-            <h4>CricPuls Smart Projections</h4>
+            <h4>CricAi Smart Projections</h4>
           </div>
           
           <div style={styles.projectionBox}>
@@ -229,7 +229,7 @@ export default function FantasyTab({ match }) {
       <div style={styles.card} className="glass-card">
         <div style={styles.cardHeader}>
           <Sparkles size={16} color="var(--teal)" />
-          <h4 style={{ margin: 0 }}>CricPuls Dream XI Recommendation</h4>
+          <h4 style={{ margin: 0 }}>CricAi Dream XI Recommendation</h4>
           <span style={styles.dreamXIBadge}>AI Suggested</span>
         </div>
 

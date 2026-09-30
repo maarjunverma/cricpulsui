@@ -67,7 +67,7 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
     <div style={styles.container} className="fade-in">
       {/* ─── Match Title Bar ─── */}
       <div style={styles.titleBar}>
-        <h2 style={styles.matchTitle}>{title}</h2>
+        <h2 className="match-title-text" style={styles.matchTitle}>{title}</h2>
         <div style={styles.metaRow}>
           <span style={styles.metaText}>Date & Time: {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}</span>
           <span style={styles.metaDot}>•</span>
@@ -97,12 +97,12 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
           <div style={styles.summaryContainer} className="fade-in">
             {/* Live Score Row */}
             <div style={styles.liveScoreRow}>
-              <div style={styles.teamScoreBlock}>
+              <div className="team-score-block" style={styles.teamScoreBlock}>
                 <div style={{ ...styles.teamAvatar, backgroundColor: team1.color }}>
                   {team1.shortName.substring(0, 2)}
                 </div>
                 <span style={styles.teamNameText}>{team1.shortName}</span>
-                <span style={styles.scoreValue}>{t1Runs}-{t1Wkts}</span>
+                <span className="score-value-text" style={styles.scoreValue}>{t1Runs}-{t1Wkts}</span>
                 <span style={styles.oversValue}>({t1Overs.toFixed(1)})</span>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
 
             {/* Batsmen Table */}
             {(striker || nonStriker) && (
-              <div style={styles.summaryTableWrapper}>
+              <div className="summary-table-wrapper" style={styles.summaryTableWrapper}>
                 <table>
                   <thead>
                     <tr style={styles.tableHeaderRow}>
@@ -155,7 +155,7 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
 
             {/* Bowler Table */}
             {bowler && (
-              <div style={styles.summaryTableWrapper}>
+              <div className="summary-table-wrapper" style={styles.summaryTableWrapper}>
                 <table>
                   <thead>
                     <tr style={styles.tableHeaderRowBowl}>
@@ -182,7 +182,7 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
             )}
 
             {/* Key Stats + Recent Balls Row */}
-            <div style={styles.statsRow}>
+            <div className="stats-row-grid" style={styles.statsRow}>
               {/* Key Stats */}
               <div style={styles.keyStatsCard}>
                 <div style={styles.keyStatsHeader}>{getUIText('keyStats', appLanguage)}</div>

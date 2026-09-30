@@ -120,7 +120,7 @@ export default function NewsPage() {
         <div style={styles.badgeRow}>
           <span style={styles.newsBadge}>
             <Newspaper size={14} color="#10b981" />
-            <span>CRICPULS EDITORIAL & NEWS FEED</span>
+            <span>CRICAI EDITORIAL & NEWS FEED</span>
           </span>
         </div>
         <h1 style={styles.pageTitle}>Latest Cricket News & Match Reports</h1>
@@ -183,7 +183,7 @@ export default function NewsPage() {
       )}
 
       {/* ─── News Grid ─── */}
-      <div style={styles.newsGrid}>
+      <div className="news-grid-responsive" style={styles.newsGrid}>
         {filteredNews.map(item => (
           <div 
             key={item.id} 
@@ -215,7 +215,7 @@ export default function NewsPage() {
       {/* ─── Article Reader Modal ─── */}
       {readingArticle && (
         <div style={styles.modalOverlay} onClick={() => setReadingArticle(null)}>
-          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+          <div className="modal-content-responsive" style={styles.modalContent} onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <span style={styles.modalTag}>{readingArticle.tag}</span>
               <button 
@@ -249,7 +249,7 @@ export default function NewsPage() {
 
             <div style={styles.modalFooter}>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Published on CricPuls Live Cricket Wire
+                Published on CricAi Live Cricket Wire
               </span>
               <button style={styles.shareBtn} onClick={() => alert('Article link copied!')}>
                 <Share2 size={14} />

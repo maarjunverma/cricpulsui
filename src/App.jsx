@@ -419,7 +419,7 @@ function App() {
       <footer style={footerStyle}>
         <div className="full-width-inner" style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-            &copy; {new Date().getFullYear()} CricPuls. All rights reserved. Live scores, commentary, and match statistics.
+            &copy; {new Date().getFullYear()} CricAi. All rights reserved. Live scores, AI commentary, and match statistics.
           </p>
         </div>
       </footer>

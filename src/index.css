@@ -1081,4 +1081,312 @@ h1, h2, h3, h4, h5 {
   transform: translateX(20px);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   CRICAI RESPONSIVE MOBILE & NAVIGATION DESIGN SYSTEM
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ─── CricAi Brand Elements ─── */
+.brand-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(20, 184, 166, 0.3));
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  padding: 2px 7px;
+  border-radius: 9999px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+  margin-left: 4px;
+}
+
+/* ─── Mobile Bottom Navigation Bar (Docked on Mobile screens) ─── */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  background: rgba(10, 14, 26, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+  z-index: 999;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 0.5rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 2px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav-item:hover {
+  color: var(--text-primary);
+}
+
+.mobile-bottom-nav-item.active {
+  color: var(--emerald);
+  font-weight: 700;
+}
+
+.mobile-bottom-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.mobile-bottom-nav-item.active .mobile-bottom-icon-wrap {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--emerald);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.mobile-bottom-nav-label {
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mobile-live-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: pulseLive 1.5s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ─── Tablet & Narrow Desktop (max-width: 1024px) ─── */
+@media (max-width: 1024px) {
+  .page-layout {
+    grid-template-columns: 1fr 260px;
+    gap: 1rem;
+    padding: 1rem 0.75rem;
+  }
+  .page-layout .left-sidebar {
+    display: none;
+  }
+}
+
+/* ─── Mobile Navbar & Header (max-width: 900px) ─── */
+@media (max-width: 900px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-primary);
+  }
+  .nav-inner {
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+/* ─── Smartphone / Handheld Devices (max-width: 768px) ─── */
+@media (max-width: 768px) {
+  #root {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .full-width-inner {
+    padding: 0 0.65rem !important;
+  }
+
+  .page-layout {
+    grid-template-columns: 1fr !important;
+    padding: 0.65rem 0.5rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .page-layout .left-sidebar,
+  .page-layout .right-sidebar {
+    display: none !important;
+  }
+
+  .page-layout .main-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Score cards track touch-friendly swipe */
+  .carousel-nav-btn {
+    display: none !important;
+  }
+
+  .score-cards-track {
+    gap: 0.75rem !important;
+    padding: 0 0.75rem 0.5rem 0.75rem !important;
+    scroll-padding: 0.75rem;
+  }
+
+  .score-card {
+    min-width: calc(85vw - 16px) !important;
+    max-width: 320px !important;
+    padding: 0.85rem !important;
+  }
+
+  .carousel-scrollbar-container {
+    margin-top: 2px !important;
+  }
+
+  /* Ticker items */
+  .ticker-item {
+    font-size: 0.85rem !important;
+    padding: 3px 8px !important;
+  }
+  .ticker-team-text {
+    font-size: 0.85rem !important;
+  }
+
+  /* MatchCenter Title & Meta */
+  .match-title-text {
+    font-size: clamp(1.1rem, 4.5vw, 1.45rem) !important;
+    line-height: 1.3 !important;
+  }
+
+  .score-value-text {
+    font-size: clamp(1.35rem, 5.5vw, 1.8rem) !important;
+  }
+
+  .team-score-block {
+    gap: 0.45rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Tabs horizontal scrolling */
+  .tabs-container {
+    padding: 0 2px;
+    gap: 2px;
+  }
+
+  .tab-btn {
+    padding: 0.6rem 0.85rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Tables inside scorecard & summary */
+  .summary-table-wrapper {
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table th, table td {
+    padding: 0.5rem 0.35rem !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap;
+  }
+
+  /* Key Stats + Recent Balls stack on mobile */
+  .stats-row-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Fixtures, Series, News */
+  .fixtures-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .header-row-responsive {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .subtabs-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  .series-layout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .news-grid-responsive {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .modal-content-responsive {
+    padding: 1.25rem 1rem !important;
+    margin: 0 0.5rem !important;
+    max-height: 85vh !important;
+  }
+
+  /* Modal Dialogs */
+  .modal-overlay {
+    padding: 0.75rem !important;
+  }
+}
+
+/* ─── Ultra Small Phones (max-width: 380px) ─── */
+@media (max-width: 380px) {
+  .logo-text {
+    font-size: 1.15rem !important;
+  }
+  .score-card {
+    min-width: calc(92vw - 12px) !important;
+  }
+  .app-language-toggle {
+    padding: 2px 4px !important;
+  }
+  .lang-opt-btn {
+    font-size: 0.7rem !important;
+    padding: 2px 5px !important;
+  }
+}
+
+
 
