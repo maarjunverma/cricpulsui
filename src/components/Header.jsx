@@ -245,10 +245,9 @@ export default function Header({
 
   return (
     <>
-    <header style={styles.headerWrapper} className="full-width-section">
-      {/* ─── Top Navbar ─── */}
-      <div style={styles.navbar}>
-        <div style={styles.navInner} className="full-width-inner">
+    {/* ─── Sticky App Header (Top Navbar) ─── */}
+    <header className="app-header-sticky" style={styles.headerSticky}>
+      <div style={styles.navInner} className="full-width-inner">
           {/* Logo */}
           <div style={styles.logoContainer} onClick={() => { setCurrentTab('live'); setMobileMenuOpen(false); }}>
             <div style={styles.logoIcon}>
@@ -370,7 +369,7 @@ export default function Header({
             })}
           </div>
         )}
-      </div>
+      </header>
 
       {/* ─── Match Ticker Bar ─── */}
       <div style={styles.tickerBar}>
@@ -650,7 +649,6 @@ export default function Header({
           </div>
         </div>
       </div>
-    </header>
 
     {/* ─── Mobile App Bottom Navigation Bar ─── */}
     <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
@@ -685,16 +683,17 @@ export default function Header({
 }
 
 const styles = {
-  headerWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    borderBottom: '1px solid var(--border-color)',
-  },
-
-  /* ─── Navbar ─── */
-  navbar: {
-    background: 'linear-gradient(135deg, #0d2b2b 0%, #0a1e2e 50%, #0d1520 100%)',
-    borderBottom: '1px solid rgba(16, 185, 129, 0.08)',
+  /* ─── Sticky Header / Navbar ─── */
+  headerSticky: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000,
+    background: 'linear-gradient(135deg, rgba(13, 43, 43, 0.98) 0%, rgba(10, 30, 46, 0.98) 50%, rgba(13, 21, 32, 0.98) 100%)',
+    borderBottom: '1px solid rgba(16, 185, 129, 0.15)',
+    backdropFilter: 'blur(18px)',
+    WebkitBackdropFilter: 'blur(18px)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.45)',
+    width: '100%',
   },
   navInner: {
     display: 'flex',
