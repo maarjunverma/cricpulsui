@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, Award, Clock } from 'lucide-react';
+import { Calendar, MapPin, Award, Clock, ChevronRight, Sparkles } from 'lucide-react';
+import MatchDetailModal from './MatchDetailModal';
 
 export default function FixturesPage({ 
   liveMatches = [], 
@@ -10,6 +11,7 @@ export default function FixturesPage({
   setCurrentTab 
 }) {
   const [localSubTab, setLocalSubTab] = useState('upcoming');
+  const [selectedModalMatch, setSelectedModalMatch] = useState(null);
   const subTab = controlledSubTab !== undefined ? controlledSubTab : localSubTab;
   const setSubTab = controlledSetSubTab || setLocalSubTab;
 
@@ -94,13 +96,9 @@ export default function FixturesPage({
             <div 
               key={match.id} 
               style={styles.card} 
-              className="glass-card"
-              onClick={() => {
-                if (match.category === 'live' || match.isFinished) {
-                  onSelectMatch(match.id);
-                  setCurrentTab('live');
-                }
-              }}
+              className="glass-card fixture-match-card"
+              onClick={() => setSelectedModalMatch(match)}
+              title="Click to view squads, ground details, pitch report and match info"
             >
               {/* Card Top Meta */}
               <div style={styles.cardTop}>
@@ -194,6 +192,25 @@ export default function FixturesPage({
                   </span>
                 )}
               </div>
+
+              {/* Action row: Squads & Ground Details */}
+              <div style={styles.cardActionRow}>
+                <span style={styles.viewDetailsText}>
+                  Squads & Ground Details <ChevronRight size={14} />
+                </span>
+                {match.category === 'live' && (
+                  <button
+                    style={styles.liveQuickBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectMatch(match.id);
+                      setCurrentTab('live');
+                    }}
+                  >
+                    Live Center <Sparkles size={11} />
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
@@ -204,6 +221,18 @@ export default function FixturesPage({
           </div>
         )}
       </div>
+
+      {/* Match Detail Modal for Squads, Ground, and Match Info */}
+      {selectedModalMatch && (
+        <MatchDetailModal 
+          match={selectedModalMatch}
+          onClose={() => setSelectedModalMatch(null)}
+          onGoToLive={(id) => {
+            onSelectMatch(id);
+            setCurrentTab('live');
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -381,5 +410,35 @@ const styles = {
     gridColumn: '1 / -1',
     padding: '3rem',
     textAlign: 'center',
+  },
+  cardActionRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '0.4rem',
+    paddingTop: '0.65rem',
+    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+  },
+  viewDetailsText: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    color: 'var(--emerald)',
+    letterSpacing: '0.02em',
+  },
+  liveQuickBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '3px 8px',
+    borderRadius: '4px',
+    background: 'rgba(16, 185, 129, 0.15)',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    color: 'var(--emerald)',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    cursor: 'pointer',
   }
 };

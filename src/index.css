@@ -1456,5 +1456,21 @@ h1, h2, h3, h4, h5 {
   }
 }
 
+/* ─── Fixture Match Cards Hover & Touch Feedback ─── */
+.fixture-match-card {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.fixture-match-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(16, 185, 129, 0.15) !important;
+}
+
+.fixture-match-card:active {
+  transform: scale(0.99);
+}
+
 
 
