@@ -431,8 +431,8 @@ export function simulateBall(match) {
     }
   }
 
-  // Recalculate Live Odds / Session predictions
-  updateLiveOddsAndSessions(matchCopy);
+  // Recalculate Win Probability & Match Projections
+  updateWinProbabilityAndProjections(matchCopy);
 
   return matchCopy;
 }
@@ -522,7 +522,7 @@ function finishMatch(match, resultText) {
   });
 }
 
-function updateLiveOddsAndSessions(match) {
+function updateWinProbabilityAndProjections(match) {
   if (match.isFinished) return;
 
   const t1runs = match.score.team1.runs;
@@ -551,31 +551,8 @@ function updateLiveOddsAndSessions(match) {
     }
   }
 
-  // Generate odds from win probability
-  // e.g. 50% means 1.95 - 1.98. 70% means 1.40 - 1.43
   const activeTeam = winProb >= 50 ? match.team1.shortName : match.team2.shortName;
-  const prob = winProb >= 50 ? winProb : 100 - winProb;
-  const rate = (100 / prob).toFixed(2);
-  const layRate = (parseFloat(rate) + 0.03).toFixed(2);
 
-  // Fluctuating session run predictions (e.g. 6-overs session runs)
-  let sessionRunsMin = 48;
-  if (match.innings === 1) {
-    const curRr = overs > 0 ? t1runs / overs : 7.5;
-    sessionRunsMin = Math.round(curRr * 6 + (Math.random() * 4 - 2));
-  } else {
-    const curRr = overs > 0 ? t2runs / overs : 7.5;
-    sessionRunsMin = Math.round(curRr * 6 + (Math.random() * 4 - 2));
-  }
-  const sessionRunsMax = sessionRunsMin + 2;
-
-  match.odds = {
-    back: rate,
-    lay: layRate,
-    team: activeTeam,
-    winProbability: winProb, // team1 percentage
-    sessionRuns: `${sessionRunsMin}-${sessionRunsMax}`,
-    sessionOddsBack: '1.85',
-    sessionOddsLay: '1.88'
-  };
+  match.winProbability = winProb;
+  match.projectedWinner = activeTeam;
 }

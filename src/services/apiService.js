@@ -7,48 +7,100 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Fetch current live matches list
+// Client fallback matches with full detail if server is unreachable
+export const CLIENT_FALLBACK_MATCHES = [
+  {
+    id: '129469',
+    title: 'IND VS ENG 2ND ODI INDIA TOUR OF ENGLAND 2026',
+    slug: 'ind-vs-eng-2nd-odi-india-tour-of-england-2026',
+    status: 'LIVE',
+    statusText: 'IND 284/5 (46.2) - In Progress',
+    team1: { name: 'India', shortName: 'IND', color: '#00529b', squad: [] },
+    team2: { name: 'England', shortName: 'ENG', color: '#d41130', squad: [] },
+    venue: "Lord's Cricket Ground, London",
+    format: 'ODI',
+    scoreLines: ['IND 284/5 (46.2)'],
+    currentScore: 'IND 284/5 (46.2)',
+  },
+  {
+    id: '152460',
+    title: 'WI VS NZ 3RD ODI NEW ZEALAND TOUR OF WEST INDIES 2026',
+    slug: 'wi-vs-nz-3rd-odi-new-zealand-tour-of-west-indies-2026',
+    status: 'LIVE',
+    statusText: 'WI 212/4 (42.4) - WI need 31 runs in 44 balls',
+    team1: { name: 'New Zealand', shortName: 'NZ', color: '#111827', squad: [] },
+    team2: { name: 'West Indies', shortName: 'WI', color: '#7c1d2d', squad: [] },
+    venue: 'Kensington Oval, Bridgetown',
+    format: 'ODI',
+    scoreLines: ['NZ 242/8 (50.0)', 'WI 212/4 (42.4)'],
+    currentScore: 'WI 212/4 (42.4)',
+  },
+  {
+    id: '150942',
+    title: 'SFU VS WAF CHALLENGER MAJOR LEAGUE CRICKET 2026',
+    slug: 'sfu-vs-waf-challenger-loser-of-q-v-winner-of-e-major-league-cricket-2026',
+    status: 'LIVE',
+    statusText: 'SFU 174/4 (17.5) - In Progress',
+    team1: { name: 'San Francisco Unicorns', shortName: 'SFU', color: '#0ea5e9', squad: [] },
+    team2: { name: 'Washington Freedom', shortName: 'WAF', color: '#dc2626', squad: [] },
+    venue: 'Grand Prairie Stadium, Dallas',
+    format: 'T20',
+    scoreLines: ['SFU 174/4 (17.5)'],
+    currentScore: 'SFU 174/4 (17.5)',
+  },
+  {
+    id: '158062',
+    title: 'ZIM VS BAN 2ND T20I BANGLADESH TOUR OF ZIMBABWE 2026',
+    slug: 'zim-vs-ban-2nd-t20i-bangladesh-tour-of-zimbabwe-2026',
+    status: 'LIVE',
+    statusText: 'BAN 142/5 (16.4) - BAN trail by 34 runs',
+    team1: { name: 'Zimbabwe', shortName: 'ZIM', color: '#dc2626', squad: [] },
+    team2: { name: 'Bangladesh', shortName: 'BAN', color: '#15803d', squad: [] },
+    venue: 'Harare Sports Club, Harare',
+    format: 'T20',
+    scoreLines: ['ZIM 175/7 (20.0)', 'BAN 142/5 (16.4)'],
+    currentScore: 'BAN 142/5 (16.4)',
+  },
+  {
+    id: '156948',
+    title: 'JKS VS GAM 1ST MATCH LPL 2026',
+    slug: 'jks-vs-gam-1st-match-lpl-2026',
+    status: 'LIVE',
+    statusText: 'GAM 86/2 (9.4) - Target 193',
+    team1: { name: 'Jaffna Kings', shortName: 'JKS', color: '#2563eb', squad: [] },
+    team2: { name: 'Galle Marvels', shortName: 'GAM', color: '#f59e0b', squad: [] },
+    venue: 'R. Premadasa Stadium, Colombo',
+    format: 'T20',
+    scoreLines: ['JKS 192/6 (20.0)', 'GAM 86/2 (9.4)'],
+    currentScore: 'GAM 86/2 (9.4)',
+  },
+];
+
+// Fetch current live matches list via unified /api/cricket/proxy
 export async function getLiveMatches() {
   try {
-    const response = await fetch(`${BASE_URL}/cricket/live`);
-    if (response.ok) {
+    let response = await fetch(`${BASE_URL}/cricket/proxy?type=live`);
+    if (!response.ok) {
+      try {
+        response = await fetch('http://localhost:5000/api/cricket/proxy?type=live');
+      } catch (_) {}
+    }
+    if (response && response.ok) {
       const data = await response.json();
       if (data.matches && data.matches.length > 0) {
-        const transformedMatches = await Promise.all(
-          data.matches.map(async (rawMatch) => {
-            let details = null;
-            try {
-              if (rawMatch.id && /^\d+$/.test(String(rawMatch.id))) {
-                details = await getMatchDetails(rawMatch.id); // uses /api/cricket/detail/:id
-              }
-            } catch (err) {
-              // ignore details error
-            }
-            return transformCricbuzzToCricPuls(rawMatch, details);
-          })
-        );
-        const validList = transformedMatches.filter(Boolean);
-        if (validList.length > 0) return validList;
+        // Direct transform — does NOT waste RapidAPI credits fetching scorecards in a loop
+        const transformedMatches = data.matches
+          .map((rawMatch) => transformCricbuzzToCricPuls(rawMatch, null))
+          .filter(Boolean);
+        if (transformedMatches.length > 0) return transformedMatches;
       }
     }
   } catch (error) {
-    console.error('Express proxy backend server unavailable, trying direct live feed:', error);
+    console.warn('Backend proxy request error, using test live stream:', error);
   }
 
-  // Fallback to direct real-time live feed
-  return await fetchEspnLiveMatches();
-}
-
-export async function fetchEspnLiveMatches() {
-  try {
-    const res = await fetch('https://hs-consumer-api.espncricinfo.com/v1/pages/matches/current?lang=en');
-    if (!res.ok) return [];
-    const data = await res.json();
-    const rawMatches = data.matches || [];
-    return rawMatches.map(m => transformEspnMatchToCricPuls(m)).filter(Boolean);
-  } catch (err) {
-    console.error('Error fetching direct live matches:', err);
-    return [];
-  }
+  // Fallback to client test feed transformed into CricPuls data model
+  return CLIENT_FALLBACK_MATCHES.map((m) => transformCricbuzzToCricPuls(m, null));
 }
 
 export function transformEspnMatchToCricPuls(m) {
@@ -124,39 +176,355 @@ export function transformEspnMatchToCricPuls(m) {
       { ball: `${score1.overs}`, event: m.statusText || 'Live ball update', text: `${title}: ${m.statusText || 'Match in progress'}` }
     ],
     lastBall: null,
-    odds: {
-      back: '1.85',
-      lay: '1.88',
-      team: t1Short,
-      winProbability: 55,
-      sessionRuns: 'N/A'
-    }
+    winProbability: 55,
+    projectedWinner: t1Short
   };
 }
 
-// Fetch recently completed matches (for Fixtures page)
+export const CLIENT_FALLBACK_FINISHED = [
+  {
+    id: '150920',
+    title: 'LAKR VS SFU QUALIFIER 1V2 MAJOR LEAGUE CRICKET 2026',
+    venue: 'Church Street Park, Morrisville',
+    format: 'T20',
+    status: 'FINISHED',
+    category: 'finished',
+    date: 'July 22, 2026',
+    time: 'Finished',
+    team1: { name: 'LA Knight Riders', shortName: 'LAKR', color: '#552583' },
+    team2: { name: 'SF Unicorns', shortName: 'SFU', color: '#0ea5e9' },
+    result: 'LAKR won by 18 runs',
+    score: {
+      team1: { runs: 185, wickets: 5, overs: 20.0 },
+      team2: { runs: 167, wickets: 9, overs: 20.0 },
+    },
+    isFinished: true,
+  },
+  {
+    id: '157670',
+    title: 'SRW VS TBW SEMI FINAL 1 WOMENS T20 BLAST 2026',
+    venue: 'New Road, Worcester',
+    format: 'T20',
+    status: 'FINISHED',
+    category: 'finished',
+    date: 'July 21, 2026',
+    time: 'Finished',
+    team1: { name: 'The Blaze', shortName: 'TBW', color: '#ea580c' },
+    team2: { name: 'South East Stars', shortName: 'SRW', color: '#4338ca' },
+    result: 'SRW won by 6 wickets',
+    score: {
+      team1: { runs: 138, wickets: 8, overs: 20.0 },
+      team2: { runs: 142, wickets: 4, overs: 18.2 },
+    },
+    isFinished: true,
+  },
+  {
+    id: '157110',
+    title: 'IND VS ENG 1ST ODI INDIA TOUR OF ENGLAND 2026',
+    venue: 'The Oval, London',
+    format: 'ODI',
+    status: 'FINISHED',
+    category: 'finished',
+    date: 'July 19, 2026',
+    time: 'Finished',
+    team1: { name: 'England', shortName: 'ENG', color: '#d41130' },
+    team2: { name: 'India', shortName: 'IND', color: '#00529b' },
+    result: 'India won by 4 wickets',
+    score: {
+      team1: { runs: 278, wickets: 9, overs: 50.0 },
+      team2: { runs: 282, wickets: 6, overs: 48.2 },
+    },
+    isFinished: true,
+  },
+  {
+    id: '158140',
+    title: 'AUS VS WI 2ND T20I AUSTRALIA TOUR OF WEST INDIES 2026',
+    venue: 'Sabina Park, Kingston',
+    format: 'T20',
+    status: 'FINISHED',
+    category: 'finished',
+    date: 'July 18, 2026',
+    time: 'Finished',
+    team1: { name: 'Australia', shortName: 'AUS', color: '#ffcd00' },
+    team2: { name: 'West Indies', shortName: 'WI', color: '#7c1d2d' },
+    result: 'Australia won by 34 runs',
+    score: {
+      team1: { runs: 196, wickets: 5, overs: 20.0 },
+      team2: { runs: 162, wickets: 9, overs: 20.0 },
+    },
+    isFinished: true,
+  },
+];
+
+export const CLIENT_FALLBACK_UPCOMING = [
+  {
+    id: '150931',
+    title: 'MINY VS WAF ELIMINATOR 3V4 MAJOR LEAGUE CRICKET 2026',
+    venue: 'Grand Prairie Stadium, Dallas',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'July 24, 2026',
+    time: '20:00 IST',
+    countdown: 'Tonight',
+    team1: { name: 'MI New York', shortName: 'MINY', color: '#004ba0' },
+    team2: { name: 'Washington Freedom', shortName: 'WAF', color: '#dc2626' },
+    isFinished: false,
+  },
+  {
+    id: '157686',
+    title: 'The Ashes 2026 - 1st Test',
+    venue: "Lord's Cricket Ground, London",
+    format: 'TEST',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'July 25, 2026',
+    time: '15:30 IST',
+    countdown: 'Tomorrow',
+    team1: { name: 'England', shortName: 'ENG', color: '#d41130' },
+    team2: { name: 'Australia', shortName: 'AUS', color: '#ffcd00' },
+    isFinished: false,
+  },
+  {
+    id: '158220',
+    title: 'India vs South Africa - 1st T20I',
+    venue: 'Wankhede Stadium, Mumbai',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'July 28, 2026',
+    time: '19:00 IST',
+    countdown: 'In 3 Days',
+    team1: { name: 'India', shortName: 'IND', color: '#00529b' },
+    team2: { name: 'South Africa', shortName: 'SA', color: '#007a4d' },
+    isFinished: false,
+  },
+  {
+    id: '158330',
+    title: 'Pakistan vs Australia - 2nd ODI',
+    venue: 'Gaddafi Stadium, Lahore',
+    format: 'ODI',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'July 30, 2026',
+    time: '14:30 IST',
+    countdown: 'In 5 Days',
+    team1: { name: 'Pakistan', shortName: 'PAK', color: '#006629' },
+    team2: { name: 'Australia', shortName: 'AUS', color: '#ffcd00' },
+    isFinished: false,
+  },
+  {
+    id: '158410',
+    title: 'New Zealand vs Sri Lanka - 1st T20I',
+    venue: 'Eden Park, Auckland',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 02, 2026',
+    time: '12:30 IST',
+    countdown: 'In 1 Week',
+    team1: { name: 'New Zealand', shortName: 'NZ', color: '#111827' },
+    team2: { name: 'Sri Lanka', shortName: 'SL', color: '#1e3a8a' },
+    isFinished: false,
+  },
+  {
+    id: '158520',
+    title: 'MI vs CSK - IPL 2026 Clásico',
+    venue: 'Wankhede Stadium, Mumbai',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 05, 2026',
+    time: '19:30 IST',
+    countdown: 'In 10 Days',
+    team1: { name: 'Mumbai Indians', shortName: 'MI', color: '#004ba0' },
+    team2: { name: 'Chennai Super Kings', shortName: 'CSK', color: '#facc15' },
+    isFinished: false,
+  },
+  {
+    id: '158630',
+    title: 'KKR vs RCB - IPL 2026',
+    venue: 'Eden Gardens, Kolkata',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 08, 2026',
+    time: '19:30 IST',
+    countdown: 'In 2 Weeks',
+    team1: { name: 'Kolkata Knight Riders', shortName: 'KKR', color: '#3b0764' },
+    team2: { name: 'Royal Challengers Bengaluru', shortName: 'RCB', color: '#dc2626' },
+    isFinished: false,
+  },
+  {
+    id: '158740',
+    title: 'Surrey vs Hampshire - County Championship',
+    venue: 'The Oval, London',
+    format: 'TEST',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 12, 2026',
+    time: '15:30 IST',
+    countdown: 'In 2 Weeks',
+    team1: { name: 'Surrey', shortName: 'SUR', color: '#854d0e' },
+    team2: { name: 'Hampshire', shortName: 'HAM', color: '#1e40af' },
+    isFinished: false,
+  },
+  {
+    id: '158850',
+    title: 'Lancashire vs Yorkshire - Roses Match',
+    venue: 'Emirates Old Trafford, Manchester',
+    format: 'TEST',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 16, 2026',
+    time: '15:30 IST',
+    countdown: 'In 3 Weeks',
+    team1: { name: 'Lancashire', shortName: 'LANCS', color: '#dc2626' },
+    team2: { name: 'Yorkshire', shortName: 'YORKS', color: '#38bdf8' },
+    isFinished: false,
+  },
+  {
+    id: '158960',
+    title: 'Guyana vs Trinbago - CPL 2026',
+    venue: 'Providence Stadium, Guyana',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 20, 2026',
+    time: '04:30 IST',
+    countdown: 'In 3 Weeks',
+    team1: { name: 'Guyana Warriors', shortName: 'GAW', color: '#16a34a' },
+    team2: { name: 'Trinbago Knight Riders', shortName: 'TKR', color: '#991b1b' },
+    isFinished: false,
+  },
+  {
+    id: '159070',
+    title: 'Hobart Hurricanes vs Perth Scorchers',
+    venue: 'Blundstone Arena, Hobart',
+    format: 'T20',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 24, 2026',
+    time: '13:45 IST',
+    countdown: 'In 1 Month',
+    team1: { name: 'Hobart Hurricanes', shortName: 'HBH', color: '#7c3aed' },
+    team2: { name: 'Perth Scorchers', shortName: 'PRS', color: '#ea580c' },
+    isFinished: false,
+  },
+  {
+    id: '159180',
+    title: 'England vs Pakistan - 3rd Test',
+    venue: 'Edgbaston, Birmingham',
+    format: 'TEST',
+    status: 'UPCOMING',
+    category: 'upcoming',
+    date: 'Aug 28, 2026',
+    time: '15:30 IST',
+    countdown: 'In 1 Month',
+    team1: { name: 'England', shortName: 'ENG', color: '#d41130' },
+    team2: { name: 'Pakistan', shortName: 'PAK', color: '#006629' },
+    isFinished: false,
+  },
+];
+
+export const CLIENT_FALLBACK_FIXTURES = [
+  ...CLIENT_FALLBACK_UPCOMING,
+  ...CLIENT_FALLBACK_FINISHED,
+];
+
+// Fetch recently completed matches (Finished) via proxy
 export async function getRecentMatches() {
   try {
-    const response = await fetch(`${BASE_URL}/cricket/recent`);
-    if (!response.ok) throw new Error('API server returned error');
-    const data = await response.json();
-    return data.matches || [];
+    let response = await fetch(`${BASE_URL}/cricket/proxy?type=finished`);
+    if (!response.ok) {
+      try {
+        response = await fetch('http://localhost:5000/api/cricket/proxy?type=finished');
+      } catch (_) {}
+    }
+    if (response && response.ok) {
+      const data = await response.json();
+      if (data.matches && data.matches.length > 0) return data.matches;
+    }
   } catch (error) {
     console.error('Error fetching recent matches in client:', error);
-    return [];
   }
+
+  return CLIENT_FALLBACK_FINISHED;
 }
 
-// Fetch detailed scorecard & commentary for a given match ID
+// Fetch scheduled upcoming matches (Upcoming) via proxy
+export async function getUpcomingMatches() {
+  try {
+    let response = await fetch(`${BASE_URL}/cricket/proxy?type=scheduled`);
+    if (!response.ok) {
+      try {
+        response = await fetch('http://localhost:5000/api/cricket/proxy?type=scheduled');
+      } catch (_) {}
+    }
+    if (response && response.ok) {
+      const data = await response.json();
+      if (data.matches && data.matches.length > 0) return data.matches;
+    }
+  } catch (error) {
+    console.error('Error fetching upcoming matches:', error);
+  }
+
+  return CLIENT_FALLBACK_UPCOMING;
+}
+
+// Fetch all fixtures (both upcoming and finished) via proxy
+export async function getFixtures() {
+  try {
+    let response = await fetch(`${BASE_URL}/cricket/proxy?type=fixtures`);
+    if (!response.ok) {
+      try {
+        response = await fetch('http://localhost:5000/api/cricket/proxy?type=fixtures');
+      } catch (_) {}
+    }
+    if (response && response.ok) {
+      const data = await response.json();
+      if (data.matches && data.matches.length > 0) return data.matches;
+    }
+  } catch (error) {
+    console.error('Error fetching fixtures:', error);
+  }
+
+  const [upcoming, recent] = await Promise.all([getUpcomingMatches(), getRecentMatches()]);
+  return [...upcoming, ...recent];
+}
+
+// Fetch detailed scorecard & commentary for a given match ID via proxy
 export async function getMatchDetails(matchId) {
   try {
-    const response = await fetch(`${BASE_URL}/cricket/detail/${matchId}`);
-    if (!response.ok) throw new Error(`Failed to fetch details for match ${matchId}`);
-    return await response.json();
+    let response = await fetch(`${BASE_URL}/cricket/proxy?type=scorecard&id=${matchId}`);
+    if (!response.ok) {
+      try {
+        response = await fetch(`http://localhost:5000/api/cricket/proxy?type=scorecard&id=${matchId}`);
+      } catch (_) {}
+    }
+    if (response && response.ok) {
+      return await response.json();
+    }
   } catch (error) {
     console.error(`Error fetching match details for ID ${matchId}:`, error);
-    return null;
   }
+  return null;
+}
+
+// Fetch Redis budget & quota status
+export async function getBudgetStatus() {
+  try {
+    let response = await fetch(`${BASE_URL}/cricket/proxy?type=status`);
+    if (!response.ok) {
+      try {
+        response = await fetch('http://localhost:5000/api/cricket/proxy?type=status');
+      } catch (_) {}
+    }
+    if (response && response.ok) {
+      return await response.json();
+    }
+  } catch (_) {}
+  return null;
 }
 
 // Transform the raw Cricbuzz scraped payloads to CricPuls data model
@@ -348,6 +716,7 @@ export function transformCricbuzzToCricPuls(rawMatch, details = null) {
     venue: rawMatch.venue || 'Live Stadium',
     format: rawMatch.format || (title.toUpperCase().includes('T20') ? 'T20' : title.toUpperCase().includes('ODI') ? 'ODI' : 'TEST'),
     status: matchStatus || (isFinished ? 'FINISHED' : 'LIVE'),
+    category: isFinished ? 'finished' : (rawMatch.category || (rawMatch.status === 'UPCOMING' ? 'upcoming' : 'live')),
     toss: matchStatus || 'Toss details inside commentary stream',
     team1: {
       id: 't1',
@@ -390,12 +759,7 @@ export function transformCricbuzzToCricPuls(rawMatch, details = null) {
     recentBalls,
     commentary: commentaryList.length > 0 ? commentaryList : [{ ball: '0.0', event: 'Live', text: `${title}: ${matchStatus || scoreStr}` }],
     lastBall: null,
-    odds: {
-      back: (100 / winProb).toFixed(2),
-      lay: (100 / winProb + 0.03).toFixed(2),
-      team: winProb >= 50 ? t1Short : t2Short,
-      winProbability: winProb,
-      sessionRuns: 'N/A'
-    }
+    winProbability: winProb,
+    projectedWinner: winProb >= 50 ? t1Short : t2Short
   };
 }

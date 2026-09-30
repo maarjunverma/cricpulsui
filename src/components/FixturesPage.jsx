@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Award, Clock } from 'lucide-react';
 
-export default function FixturesPage({ liveMatches, fixtures, onSelectMatch, setCurrentTab }) {
-  const [subTab, setSubTab] = useState('live'); // 'live', 'upcoming', 'finished'
+export default function FixturesPage({ 
+  liveMatches = [], 
+  fixtures = [], 
+  subTab: controlledSubTab,
+  setSubTab: controlledSetSubTab,
+  onSelectMatch, 
+  setCurrentTab 
+}) {
+  const [localSubTab, setLocalSubTab] = useState('upcoming');
+  const subTab = controlledSubTab !== undefined ? controlledSubTab : localSubTab;
+  const setSubTab = controlledSetSubTab || setLocalSubTab;
 
-  // Combine liveMatches and mockFixtures to get complete lists
+  // Combine liveMatches and fixtures cleanly with accurate category normalization
   const allMatches = [
-    ...liveMatches.map(m => ({ ...m, category: m.isFinished ? 'finished' : 'live' })),
-    ...fixtures.map(f => ({ ...f, category: f.status.toLowerCase() }))
+    ...liveMatches.map(m => ({ 
+      ...m, 
+      category: m.isFinished ? 'finished' : (m.category || (m.status === 'UPCOMING' ? 'upcoming' : 'live')) 
+    })),
+    ...fixtures.filter(f => !liveMatches.some(lm => lm.id === f.id)).map(f => {
+      let cat = f.category;
+      if (!cat) {
+        if (f.isFinished || (f.status && f.status.toUpperCase() === 'FINISHED')) cat = 'finished';
+        else if (f.status && f.status.toUpperCase() === 'UPCOMING') cat = 'upcoming';
+        else if (f.status && f.status.toUpperCase() === 'LIVE') cat = 'live';
+        else cat = 'upcoming';
+      }
+      return {
+        ...f,
+        category: cat.toLowerCase()
+      };
+    })
   ];
 
-  const filteredMatches = allMatches.filter(m => m.category === subTab);
+  const liveMatchesList = allMatches.filter(m => m.category === 'live');
+  const upcomingMatchesList = allMatches.filter(m => m.category === 'upcoming');
+  const finishedMatchesList = allMatches.filter(m => m.category === 'finished');
+
+  const filteredMatches = subTab === 'live' 
+    ? liveMatchesList 
+    : subTab === 'upcoming' 
+      ? upcomingMatchesList 
+      : finishedMatchesList;
 
   const getFormatBadgeColor = (format) => {
     if (format === 'T20') return 'rgba(20, 184, 166, 0.1)';
@@ -27,7 +59,7 @@ export default function FixturesPage({ liveMatches, fixtures, onSelectMatch, set
   return (
     <div style={styles.container} className="fade-in">
       <div style={styles.headerRow}>
-        <h2 style={styles.title}>Cricket Fixtures</h2>
+        <h2 style={styles.title}>Cricket Fixtures & Schedule</h2>
         
         {/* Inner sub tabs */}
         <div style={styles.subTabs}>
@@ -35,19 +67,19 @@ export default function FixturesPage({ liveMatches, fixtures, onSelectMatch, set
             onClick={() => setSubTab('live')} 
             style={{...styles.subTabBtn, ...(subTab === 'live' ? styles.subTabBtnActive : {})}}
           >
-            In-Progress ({allMatches.filter(m => m.category === 'live').length})
+            In-Progress ({liveMatchesList.length})
           </button>
           <button 
             onClick={() => setSubTab('upcoming')} 
             style={{...styles.subTabBtn, ...(subTab === 'upcoming' ? styles.subTabBtnActive : {})}}
           >
-            Upcoming ({allMatches.filter(m => m.category === 'upcoming').length})
+            Upcoming ({upcomingMatchesList.length})
           </button>
           <button 
             onClick={() => setSubTab('finished')} 
             style={{...styles.subTabBtn, ...(subTab === 'finished' ? styles.subTabBtnActive : {})}}
           >
-            Finished ({allMatches.filter(m => m.category === 'finished').length})
+            Finished ({finishedMatchesList.length})
           </button>
         </div>
       </div>
@@ -89,7 +121,7 @@ export default function FixturesPage({ liveMatches, fixtures, onSelectMatch, set
                 {match.category === 'upcoming' && (
                   <span style={styles.upcomingBadge}>
                     <Clock size={10} style={{ marginRight: '4px' }} />
-                    {match.countdown}
+                    {match.countdown || 'Upcoming'}
                   </span>
                 )}
                 {match.category === 'finished' && (
@@ -109,35 +141,37 @@ export default function FixturesPage({ liveMatches, fixtures, onSelectMatch, set
               <div style={styles.teamContainer}>
                 <div style={styles.teamLine}>
                   <div style={styles.teamDetails}>
-                    <div style={{...styles.teamDot, backgroundColor: match.team1.color}} />
-                    <span style={styles.teamName}>{match.team1.name}</span>
+                    <div style={{...styles.teamDot, backgroundColor: match.team1?.color || '#00529b'}} />
+                    <span style={styles.teamName}>{match.team1?.name || match.team1?.shortName}</span>
                   </div>
                   {/* Show scores if match started/finished */}
-                  {(match.category === 'live' || match.category === 'finished') && match.score && (
+                  {(match.category === 'live' || match.category === 'finished') && match.score?.team1 && (
                     <span style={styles.scoreText}>
                       {match.score.team1.runs}/{match.score.team1.wickets} 
-                      <span style={styles.oversText}>({match.score.team1.overs.toFixed(1)})</span>
+                      <span style={styles.oversText}>({typeof match.score.team1.overs === 'number' ? match.score.team1.overs.toFixed(1) : match.score.team1.overs})</span>
                     </span>
                   )}
                 </div>
 
                 <div style={styles.teamLine}>
                   <div style={styles.teamDetails}>
-                    <div style={{...styles.teamDot, backgroundColor: match.team2.color}} />
-                    <span style={styles.teamName}>{match.team2.name}</span>
+                    <div style={{...styles.teamDot, backgroundColor: match.team2?.color || '#ffcd00'}} />
+                    <span style={styles.teamName}>{match.team2?.name || match.team2?.shortName}</span>
                   </div>
                   {/* Show scores if match started/finished */}
-                  {(match.category === 'live' || match.category === 'finished') && match.score && (
-                    <span style={styles.scoreText}>
-                      {match.innings === 2 || match.category === 'finished' ? (
-                        <>
-                          {match.score.team2.runs}/{match.score.team2.wickets} 
-                          <span style={styles.oversText}>({match.score.team2.overs.toFixed(1)})</span>
-                        </>
-                      ) : (
-                        'Yet to bat'
-                      )}
-                    </span>
+                  {(match.category === 'live' || match.category === 'finished') && (
+                    match.score?.team2 ? (
+                      <span style={styles.scoreText}>
+                        {match.innings === 2 || match.category === 'finished' || match.score.team2.runs > 0 ? (
+                          <>
+                            {match.score.team2.runs}/{match.score.team2.wickets} 
+                            <span style={styles.oversText}>({typeof match.score.team2.overs === 'number' ? match.score.team2.overs.toFixed(1) : match.score.team2.overs})</span>
+                          </>
+                        ) : (
+                          'Yet to bat'
+                        )}
+                      </span>
+                    ) : null
                   )}
                 </div>
               </div>

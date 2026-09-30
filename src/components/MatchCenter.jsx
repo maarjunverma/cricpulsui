@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import LiveTab from './LiveTab';
 import ScorecardTab from './ScorecardTab';
-import OddsTab from './OddsTab';
 import AnalyticsTab from './AnalyticsTab';
 import FantasyTab from './FantasyTab';
 import { MapPin, Users, Info } from 'lucide-react';
+import { getUIText } from '../services/translations';
 
 
-export default function MatchCenter({ match, onPlayerClick }) {
+export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', onLanguageChange }) {
   const [activeTab, setActiveTab] = useState('summary');
 
   if (!match) {
     return (
       <div style={styles.emptyContainer} className="glass-card fade-in">
-        <h3 style={{ color: 'var(--text-secondary)' }}>Select a match from the cards above</h3>
+        <h3 style={{ color: 'var(--text-secondary)' }}>{getUIText('selectMatchPrompt', appLanguage)}</h3>
       </div>
     );
   }
@@ -49,13 +49,12 @@ export default function MatchCenter({ match, onPlayerClick }) {
   const rrr = calculateRRR();
 
   const tabs = [
-    { key: 'summary', label: 'Summary' },
-    { key: 'live', label: 'Commentary' },
-    { key: 'scorecard', label: 'Scorecard' },
-    { key: 'info', label: 'Info' },
-    { key: 'odds', label: 'Odds & Session' },
-    { key: 'analytics', label: 'Analytics' },
-    { key: 'fantasy', label: 'Fantasy' },
+    { key: 'summary', label: getUIText('summary', appLanguage) },
+    { key: 'live', label: getUIText('aiCommentary', appLanguage) },
+    { key: 'scorecard', label: getUIText('scorecard', appLanguage) },
+    { key: 'info', label: getUIText('info', appLanguage) },
+    { key: 'analytics', label: getUIText('analytics', appLanguage) },
+    { key: 'fantasy', label: getUIText('fantasy', appLanguage) },
   ];
 
   // Build batsmen/bowler data for summary
@@ -120,12 +119,12 @@ export default function MatchCenter({ match, onPlayerClick }) {
                 <table>
                   <thead>
                     <tr style={styles.tableHeaderRow}>
-                      <th style={styles.thBatter}>Batter</th>
-                      <th style={styles.thNum}>R</th>
-                      <th style={styles.thNum}>B</th>
-                      <th style={styles.thNum}>4s</th>
-                      <th style={styles.thNum}>6s</th>
-                      <th style={styles.thNum}>SR</th>
+                      <th style={styles.thBatter}>{getUIText('batter', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('runs', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('balls', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('fours', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('sixes', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('strikeRate', appLanguage)}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -160,12 +159,12 @@ export default function MatchCenter({ match, onPlayerClick }) {
                 <table>
                   <thead>
                     <tr style={styles.tableHeaderRowBowl}>
-                      <th style={styles.thBatter}>Bowler</th>
-                      <th style={styles.thNum}>O</th>
-                      <th style={styles.thNum}>M</th>
-                      <th style={styles.thNum}>R</th>
-                      <th style={styles.thNum}>W</th>
-                      <th style={styles.thNum}>ECO</th>
+                      <th style={styles.thBatter}>{getUIText('bowler', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('overs', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('maidens', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('runs', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('wickets', appLanguage)}</th>
+                      <th style={styles.thNum}>{getUIText('economy', appLanguage)}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -186,7 +185,7 @@ export default function MatchCenter({ match, onPlayerClick }) {
             <div style={styles.statsRow}>
               {/* Key Stats */}
               <div style={styles.keyStatsCard}>
-                <div style={styles.keyStatsHeader}>Key Stats</div>
+                <div style={styles.keyStatsHeader}>{getUIText('keyStats', appLanguage)}</div>
                 <div style={styles.statItem}>
                   <span style={styles.statLabel}>CRR:</span>
                   <span style={{ ...styles.statVal, color: 'var(--emerald)' }}>{crr}</span>
@@ -198,14 +197,14 @@ export default function MatchCenter({ match, onPlayerClick }) {
                   </div>
                 )}
                 <div style={styles.statItem}>
-                  <span style={styles.statLabel}>Toss:</span>
+                  <span style={styles.statLabel}>{getUIText('toss', appLanguage)}:</span>
                   <span style={styles.statVal}>{toss}</span>
                 </div>
               </div>
 
               {/* Recent Balls */}
               <div style={styles.recentBallsCard}>
-                <span style={styles.recentLabel}>Recent:</span>
+                <span style={styles.recentLabel}>{getUIText('recent', appLanguage)}:</span>
                 <div style={styles.ballsRow}>
                   {recentBalls.map((ball, i) => {
                     let className = 'ball-circle';
@@ -224,7 +223,12 @@ export default function MatchCenter({ match, onPlayerClick }) {
 
         {/* ─── Other Tabs ─── */}
         {activeTab === 'live' && (
-          <LiveTab match={match} onPlayerClick={onPlayerClick} />
+          <LiveTab 
+            match={match} 
+            onPlayerClick={onPlayerClick} 
+            appLanguage={appLanguage}
+            onLanguageChange={onLanguageChange}
+          />
         )}
         {activeTab === 'scorecard' && (
           <ScorecardTab match={match} onPlayerClick={onPlayerClick} />
@@ -292,7 +296,6 @@ export default function MatchCenter({ match, onPlayerClick }) {
             </div>
           </div>
         )}
-        {activeTab === 'odds' && <OddsTab match={match} />}
         {activeTab === 'analytics' && <AnalyticsTab match={match} />}
         {activeTab === 'fantasy' && <FantasyTab match={match} />}
       </div>

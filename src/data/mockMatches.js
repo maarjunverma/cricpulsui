@@ -153,15 +153,7 @@
 //       { ball: '16.5', event: 'Wicket!', text: 'OUT! Rishabh Pant goes big but hoists it straight into the hands of Steve Smith at deep mid-wicket! Starc strikes back. Pant c Smith b Starc 11(10).' },
 //       { ball: '16.4', event: '6 runs', text: 'SIX! BOOM! Pant kneels down and slog sweeps it clean over the square leg boundary for a massive six!' },
 //       { ball: '16.3', event: 'Wide', text: 'Wide. Starc sprays this one down the leg side. Wicketkeeper collects.' }
-//     ],
-//     odds: {
-//       back: '1.75',
-//       lay: '1.78',
-//       team: 'IND',
-//       sessionRuns: '192-195',
-//       sessionOddsBack: '1.90',
-//       sessionOddsLay: '1.92'
-//     }
+//     ]
 //   },
 //   {
 //     id: 'live_2',
@@ -225,15 +217,7 @@
 //       { ball: '15.4', event: '2 runs', text: 'Dube strokes it to sweeper cover and pushes hard for the second run. Sturdy running!' },
 //       { ball: '15.3', event: '1 run', text: 'Jadeja pushes a quick length delivery to cover point for a single.' },
 //       { ball: '15.2', event: '4 runs', text: 'FOUR! Shot! Bumrah misses the yorker by a margin, and Dube whips it through mid-wicket for a boundary!' }
-//     ],
-//     odds: {
-//       back: '2.10',
-//       lay: '2.14',
-//       team: 'CSK',
-//       sessionRuns: '185-188',
-//       sessionOddsBack: '1.85',
-//       sessionOddsLay: '1.88'
-//     }
+//     ]
 //   }
 // ];
 

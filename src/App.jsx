@@ -4,11 +4,21 @@ import MatchCenter from './components/MatchCenter';
 import FixturesPage from './components/FixturesPage';
 import TeamsPage from './components/TeamsPage';
 import RankingsPage from './components/RankingsPage';
+import SeriesPage from './components/SeriesPage';
+import NewsPage from './components/NewsPage';
 import PlayerProfileModal from './components/PlayerProfileModal';
 import { simulateBall } from './services/simulationEngine';
 import { setMute } from './services/audioService';
-import { getLiveMatches, getMatchDetails, transformCricbuzzToCricPuls } from './services/apiService';
+import { 
+  getLiveMatches, 
+  getFixtures, 
+  getMatchDetails, 
+  transformCricbuzzToCricPuls,
+  CLIENT_FALLBACK_MATCHES,
+  CLIENT_FALLBACK_FIXTURES
+} from './services/apiService';
 import './App.css';
+import { getUIText } from './services/translations';
 
 
 // Popular Series (static mock data for left sidebar)
@@ -33,14 +43,26 @@ const TOP_RANKINGS = {
 
 function App() {
   const [currentTab, setCurrentTab] = useState('live');
-  const [liveMatches, setLiveMatches] = useState([]);   // filled by live API poll
-  const [fixtures, setFixtures] = useState([]);          // filled by live API poll
-  const [selectedMatchId, setSelectedMatchId] = useState(null);
+  const [fixturesSubTab, setFixturesSubTab] = useState('upcoming');
+  const [liveMatches, setLiveMatches] = useState(() => 
+    CLIENT_FALLBACK_MATCHES.map(m => transformCricbuzzToCricPuls(m, null))
+  );
+  const [fixtures, setFixtures] = useState(() => CLIENT_FALLBACK_FIXTURES);
+  const [selectedMatchId, setSelectedMatchId] = useState(CLIENT_FALLBACK_MATCHES[0]?.id || '129469');
   const [simSpeed, setSimSpeed] = useState(5000);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
   const [appMode, setAppMode] = useState('live');
   const [rankingFormat, setRankingFormat] = useState('ODI');
+  const [appLanguage, setAppLanguage] = useState(() => {
+    return localStorage.getItem('cricpuls_app_language') || 'en';
+  });
+
+  const handleLanguageChange = (newLang) => {
+    const lang = newLang === 'hi' ? 'hi' : 'en';
+    setAppLanguage(lang);
+    localStorage.setItem('cricpuls_app_language', lang);
+  };
 
   const handleToggleMute = () => {
     const nextMute = !isMuted;
@@ -53,31 +75,107 @@ function App() {
     setAppMode(nextMode);
   };
 
-  // Live API Polling Loop
+  // 1. Scheduled / Finished Fixtures: Poll only ONCE PER HOUR (Requirement 3)
+  useEffect(() => {
+    let active = true;
+
+    const fetchFixtures = async () => {
+      try {
+        const fixturesList = await getFixtures();
+        if (active && fixturesList && fixturesList.length > 0) {
+          setFixtures(fixturesList);
+        }
+      } catch (err) {
+        console.warn("Fixtures fetch error:", err);
+      }
+    };
+
+    fetchFixtures();
+    const oneHourTimer = setInterval(fetchFixtures, 60 * 60 * 1000); // 60 minutes
+
+    return () => {
+      active = false;
+      clearInterval(oneHourTimer);
+    };
+  }, []);
+
+  // 2. Live Matches Polling: 15s if live match exists, 5m if no match is live (Requirement 3)
   useEffect(() => {
     if (appMode !== 'live') return;
 
     let active = true;
+    let timerId = null;
 
-    const pollLiveMatches = async () => {
-      console.log("Polling real-time live matches...");
-      const matchesList = await getLiveMatches();
-      if (!active) return;
+    const pollLive = async () => {
+      try {
+        const matchesList = await getLiveMatches();
+        if (!active) return;
 
-      if (matchesList && matchesList.length > 0) {
-        setLiveMatches(matchesList);
-        setSelectedMatchId(prevId => {
-          return matchesList.some(m => m.id === prevId) ? prevId : matchesList[0].id;
-        });
+        let hasLive = false;
+        if (matchesList && matchesList.length > 0) {
+          setLiveMatches(matchesList);
+          setSelectedMatchId(prevId => {
+            return matchesList.some(m => m.id === prevId) ? prevId : matchesList[0].id;
+          });
+          hasLive = matchesList.some(m => m.status === 'LIVE' && !m.isFinished);
+        }
+
+        // If no match is currently live, do not hammer RapidAPI — poll in 5 minutes!
+        const delay = hasLive ? 15000 : 300000;
+        if (active) {
+          timerId = setTimeout(pollLive, delay);
+        }
+      } catch (err) {
+        console.warn("Live poll error:", err);
+        if (active) {
+          timerId = setTimeout(pollLive, 30000);
+        }
       }
     };
 
-    pollLiveMatches();
-    const intervalId = setInterval(pollLiveMatches, 15000);
+    pollLive();
 
     return () => {
       active = false;
-      clearInterval(intervalId);
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [appMode]);
+
+  // 3. Scorecard / Detail Polling: Only for the currently selected match (and only if active)
+  useEffect(() => {
+    if (appMode !== 'live' || !selectedMatchId) return;
+
+    let active = true;
+    let detailTimer = null;
+
+    const currentMatch = liveMatches.find(m => m.id === selectedMatchId);
+    const isLive = currentMatch ? (!currentMatch.isFinished && currentMatch.status === 'LIVE') : true;
+
+    const fetchDetail = async () => {
+      try {
+        const details = await getMatchDetails(selectedMatchId);
+        if (active && details) {
+          setLiveMatches(prev => prev.map(m => {
+            if (m.id === selectedMatchId) {
+              return transformCricbuzzToCricPuls(m, details);
+            }
+            return m;
+          }));
+        }
+      } catch (err) {
+        console.warn("Match detail fetch error:", err);
+      }
+    };
+
+    fetchDetail();
+    // Only poll scorecard repeatedly if match is currently live
+    if (isLive) {
+      detailTimer = setInterval(fetchDetail, 15000);
+    }
+
+    return () => {
+      active = false;
+      if (detailTimer) clearInterval(detailTimer);
     };
   }, [appMode, selectedMatchId]);
 
@@ -132,7 +230,10 @@ function App() {
       <Header 
         currentTab={currentTab} 
         setCurrentTab={setCurrentTab} 
+        fixturesSubTab={fixturesSubTab}
+        setFixturesSubTab={setFixturesSubTab}
         liveMatches={liveMatches}
+        fixtures={fixtures}
         selectedMatchId={selectedMatchId}
         setSelectedMatchId={setSelectedMatchId}
         simSpeed={simSpeed}
@@ -142,6 +243,8 @@ function App() {
         onToggleMute={handleToggleMute}
         appMode={appMode}
         onToggleMode={handleToggleMode}
+        appLanguage={appLanguage}
+        onLanguageChange={handleLanguageChange}
       />
 
       {/* 3-Column Layout */}
@@ -149,17 +252,28 @@ function App() {
         {/* ─── Left Sidebar ─── */}
         <aside className="left-sidebar">
           <div className="sidebar-card">
-            <h3>Popular Series</h3>
+            <h3>{getUIText('popularSeries', appLanguage)}</h3>
             {POPULAR_SERIES.map((series, i) => (
-              <span key={i} className="sidebar-link">{series}</span>
+              <span 
+                key={i} 
+                className="sidebar-link" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => setCurrentTab('series')}
+              >
+                {series}
+              </span>
             ))}
-            <span className="sidebar-link" style={{ color: 'var(--emerald)', fontWeight: '600', marginTop: '4px' }}>
-              See More
+            <span 
+              className="sidebar-link" 
+              style={{ color: 'var(--emerald)', fontWeight: '600', marginTop: '4px', cursor: 'pointer' }}
+              onClick={() => setCurrentTab('series')}
+            >
+              {getUIText('seeMore', appLanguage)}
             </span>
           </div>
 
           <div className="sidebar-card">
-            <h3>Top Rankings</h3>
+            <h3>{getUIText('topRankings', appLanguage)}</h3>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '0.75rem' }}>
               {['ODI', 'TEST', 'T20'].map(fmt => (
                 <button
@@ -183,11 +297,11 @@ function App() {
             </div>
             <div style={{ fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', borderBottom: '1px solid var(--border-color)' }}>
-                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>No.1 Batter</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{getUIText('no1Batter', appLanguage)}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{TOP_RANKINGS[rankingFormat].batter}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0' }}>
-                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>No.1 Bowler</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{getUIText('no1Bowler', appLanguage)}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{TOP_RANKINGS[rankingFormat].bowler}</span>
               </div>
             </div>
@@ -200,6 +314,8 @@ function App() {
             <MatchCenter 
               match={selectedMatch} 
               onPlayerClick={setSelectedPlayerId} 
+              appLanguage={appLanguage}
+              onLanguageChange={handleLanguageChange}
             />
           )}
           
@@ -207,9 +323,22 @@ function App() {
             <FixturesPage 
               liveMatches={liveMatches}
               fixtures={fixtures}
+              subTab={fixturesSubTab}
+              setSubTab={setFixturesSubTab}
               onSelectMatch={setSelectedMatchId}
               setCurrentTab={setCurrentTab}
             />
+          )}
+
+          {currentTab === 'series' && (
+            <SeriesPage 
+              onSelectMatch={setSelectedMatchId}
+              setCurrentTab={setCurrentTab}
+            />
+          )}
+
+          {currentTab === 'news' && (
+            <NewsPage />
           )}
 
           {currentTab === 'teams' && (
@@ -228,7 +357,7 @@ function App() {
         {/* ─── Right Sidebar ─── */}
         <aside className="right-sidebar">
           <div className="sidebar-card">
-            <h3>Download the App</h3>
+            <h3>{getUIText('downloadApp', appLanguage)}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <a href="#" style={sidebarStyles.downloadLink}>
                 <span style={sidebarStyles.downloadIcon}>▶</span>
@@ -244,7 +373,7 @@ function App() {
           </div>
 
           <div className="sidebar-card">
-            <h3>Follow Us</h3>
+            <h3>{getUIText('followUs', appLanguage)}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {['YouTube', 'Instagram', 'Twitter'].map(platform => (
                 <a key={platform} href="#" style={sidebarStyles.socialLink}>
@@ -256,22 +385,22 @@ function App() {
           </div>
 
           <div className="sidebar-card">
-            <h3>Quick Stats</h3>
+            <h3>{getUIText('quickStats', appLanguage)}</h3>
             <div style={{ fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={sidebarStyles.statRow}>
-                <span style={{ color: 'var(--text-muted)' }}>Live Matches</span>
+                <span style={{ color: 'var(--text-muted)' }}>{getUIText('liveMatchesCount', appLanguage)}</span>
                 <span style={{ color: 'var(--emerald)', fontWeight: '700' }}>
                   {liveMatches.filter(m => !m.isFinished).length}
                 </span>
               </div>
               <div style={sidebarStyles.statRow}>
-                <span style={{ color: 'var(--text-muted)' }}>Completed</span>
+                <span style={{ color: 'var(--text-muted)' }}>{getUIText('completedMatchesCount', appLanguage)}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: '700' }}>
                   {liveMatches.filter(m => m.isFinished).length}
                 </span>
               </div>
               <div style={sidebarStyles.statRow}>
-                <span style={{ color: 'var(--text-muted)' }}>Mode</span>
+                <span style={{ color: 'var(--text-muted)' }}>{getUIText('mode', appLanguage)}</span>
                 <span style={{ 
                   color: 'var(--red-accent)',
                   fontWeight: '700',
@@ -290,7 +419,7 @@ function App() {
       <footer style={footerStyle}>
         <div className="full-width-inner" style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-            &copy; {new Date().getFullYear()} CricPuls. All rights reserved. Live scores, statistics, and session odds are simulated.
+            &copy; {new Date().getFullYear()} CricPuls. All rights reserved. Live scores, commentary, and match statistics.
           </p>
         </div>
       </footer>

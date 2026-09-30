@@ -163,13 +163,13 @@ export default function FantasyTab({ match }) {
                   strokeWidth="8" 
                   strokeLinecap="round"
                   strokeDasharray="125"
-                  strokeDashoffset={125 - (125 * (match.odds?.winProbability || 50)) / 100}
+                  strokeDashoffset={125 - (125 * (match.winProbability ?? 50)) / 100}
                   style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
                 />
               </svg>
               <div style={styles.gaugeText}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>LIVE ODDS FAV</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#fff' }}>{match.odds?.team || 'N/A'}</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>PROJECTED WINNER</span>
+                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#fff' }}>{match.projectedWinner || match.team1?.shortName || 'N/A'}</span>
               </div>
             </div>
           </div>

@@ -1,0 +1,162 @@
+// Centralized UI Translations for CricPuls (English and Hindi)
+export const UI_TRANSLATIONS = {
+  en: {
+    // Navigation
+    home: 'Home',
+    schedule: 'Schedule',
+    series: 'Series',
+    news: 'News',
+    teams: 'Teams',
+    rankings: 'Rankings',
+    
+    // Ticker & Filters
+    matches: 'MATCHES',
+    all: 'All',
+    live: 'Live',
+    upcoming: 'Upcoming',
+    finished: 'Finished',
+    yetToBat: 'Yet to bat',
+    
+    // MatchCenter Tabs
+    summary: 'Summary',
+    aiCommentary: 'AI Commentary 🎙️',
+    scorecard: 'Scorecard',
+    info: 'Info',
+    analytics: 'Analytics',
+    fantasy: 'Fantasy',
+    
+    // Match Details & Cards
+    batter: 'Batter',
+    bowler: 'Bowler',
+    batting: 'Batting',
+    bowling: 'Bowling',
+    runs: 'R',
+    balls: 'B',
+    fours: '4s',
+    sixes: '6s',
+    strikeRate: 'SR',
+    overs: 'O',
+    maidens: 'M',
+    wickets: 'W',
+    economy: 'Econ',
+    keyStats: 'Key Stats',
+    winProbability: 'Win Probability',
+    recent: 'Recent',
+    recentBalls: 'Recent Balls:',
+    toss: 'Toss',
+    startsOfOver: 'Start of over...',
+    noActiveBatsmen: 'No active batsmen',
+    noActiveBowler: 'No active bowler',
+    selectMatchPrompt: 'Select a match from the cards above',
+    
+    // Sidebars
+    popularSeries: 'Popular Series',
+    seeMore: 'See More',
+    topRankings: 'Top Rankings',
+    no1Batter: 'No.1 Batter',
+    no1Bowler: 'No.1 Bowler',
+    downloadApp: 'Download the App',
+    followUs: 'Follow Us',
+    quickStats: 'Quick Stats',
+    liveMatchesCount: 'Live Matches',
+    completedMatchesCount: 'Completed',
+    mode: 'Mode',
+    
+    // Commentary & Audio
+    listenLive: 'Listen Live',
+    stop: 'Stop',
+    autoSpeak: 'Auto-Speak Live Balls',
+    autoSpeakSub: 'Automatically announce each ball in English',
+    voiceSpeed: 'Voice Speed',
+    voicePitch: 'Voice Pitch',
+    commentaryStyle: 'Commentary Style',
+    englishSubtitles: 'English Subtitles',
+    settingsTitle: 'Commentary & Audio Settings',
+    languageLabel: 'Language (App & Commentary)',
+    deep: 'Deep',
+    normal: 'Normal',
+    high: 'High',
+  },
+  hi: {
+    // Navigation
+    home: 'होम',
+    schedule: 'शेड्यूल',
+    series: 'सीरीज़',
+    news: 'समाचार',
+    teams: 'टीमें',
+    rankings: 'रैंकिंग',
+    
+    // Ticker & Filters
+    matches: 'मैचेस',
+    all: 'सभी',
+    live: 'लाइव',
+    upcoming: 'आगामी',
+    finished: 'समाप्त',
+    yetToBat: 'बल्लेबाज़ी बाकी',
+    
+    // MatchCenter Tabs
+    summary: 'सारांश',
+    aiCommentary: 'एआई कमेंट्री 🎙️',
+    scorecard: 'स्कोरकार्ड',
+    info: 'जानकारी',
+    analytics: 'एनालिटिक्स',
+    fantasy: 'फैंटेसी',
+    
+    // Match Details & Cards
+    batter: 'बल्लेबाज़',
+    bowler: 'गेंदबाज़',
+    batting: 'बल्लेबाज़ी',
+    bowling: 'गेंदबाज़ी',
+    runs: 'रन',
+    balls: 'गेंदें',
+    fours: 'चौके',
+    sixes: 'छक्के',
+    strikeRate: 'स्ट्राइक रेट',
+    overs: 'ओवर',
+    maidens: 'मेडन',
+    wickets: 'विकेट',
+    economy: 'इकोनॉमी',
+    keyStats: 'मुख्य आँकड़े',
+    winProbability: 'जीत की संभावना',
+    recent: 'हाल की गेंदें',
+    recentBalls: 'हाल की गेंदें:',
+    toss: 'टॉस',
+    startsOfOver: 'ओवर की शुरुआत...',
+    noActiveBatsmen: 'कोई सक्रिय बल्लेबाज़ नहीं',
+    noActiveBowler: 'कोई सक्रिय गेंदबाज़ नहीं',
+    selectMatchPrompt: 'कृपया ऊपर दिए गए कार्ड्स में से कोई मैच चुनें',
+    
+    // Sidebars
+    popularSeries: 'लोकप्रिय सीरीज़',
+    seeMore: 'और देखें',
+    topRankings: 'शीर्ष रैंकिंग',
+    no1Batter: 'नंबर 1 बल्लेबाज़',
+    no1Bowler: 'नंबर 1 गेंदबाज़',
+    downloadApp: 'ऐप डाउनलोड करें',
+    followUs: 'हमें फॉलो करें',
+    quickStats: 'त्वरित आँकड़े',
+    liveMatchesCount: 'लाइव मैच',
+    completedMatchesCount: 'समाप्त',
+    mode: 'मोड',
+    
+    // Commentary & Audio
+    listenLive: 'लाइव सुनें',
+    stop: 'रोकें',
+    autoSpeak: 'ऑटो-स्पीक लाइव गेंदें',
+    autoSpeakSub: 'हर गेंद का हिंदी में लाइव वाचन करें',
+    voiceSpeed: 'आवाज़ की गति',
+    voicePitch: 'आवाज़ की पिच',
+    commentaryStyle: 'कमेंट्री स्टाइल',
+    englishSubtitles: 'अंग्रेजी सबटाइटल्स',
+    settingsTitle: 'कमेंट्री व ऑडियो सेटिंग्स',
+    languageLabel: 'भाषा (ऐप व कमेंट्री)',
+    deep: 'गहरी',
+    normal: 'सामान्य',
+    high: 'उच्च',
+  }
+};
+
+export function getUIText(key, lang = 'en') {
+  const dictionary = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.en;
+  return dictionary[key] || UI_TRANSLATIONS.en[key] || key;
+}
