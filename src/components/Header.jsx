@@ -610,7 +610,7 @@ export default function Header({
                           ...styles.cardFooterLink,
                           color: isLive ? 'var(--emerald)' : isFinished ? 'var(--amber)' : 'var(--text-muted)'
                         }}>
-                          {match.result || match.statusText || (isUpcoming ? `${match.date} • ${match.time}` : match.status)}
+                          {match.result || match.statusText || (isUpcoming ? (match.date && match.time ? `${match.date} • ${match.time}` : (match.countdown || match.date || match.status || 'Match Scheduled')) : match.status)}
                         </span>
                       </div>
                     </div>

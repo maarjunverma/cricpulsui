@@ -277,14 +277,18 @@ const styles = {
   },
   gridRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
     gap: '1rem',
+    width: '100%',
   },
   card: {
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    overflowX: 'auto',
   },
   cardHeader: {
     display: 'flex',

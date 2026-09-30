@@ -191,70 +191,72 @@ export default function RankingsPage({ onPlayerClick }) {
           </h4>
         </div>
 
-        <table style={styles.table}>
-          <thead>
-            {category === 'TEAMS' ? (
-              <tr>
-                <th style={{ width: '15%' }}>Rank</th>
-                <th style={{ width: '45%' }}>Team</th>
-                <th style={styles.textRight}>Points</th>
-                <th style={styles.textRight}>Rating</th>
-              </tr>
-            ) : (
-              <tr>
-                <th style={{ width: '15%' }}>Rank</th>
-                <th style={{ width: '45%' }}>Player Name</th>
-                <th style={{ width: '25%' }}>Team</th>
-                <th style={styles.textRight}>Rating</th>
-              </tr>
-            )}
-          </thead>
-          <tbody>
-            {rankingsData.map(item => {
-              const playerId = category !== 'TEAMS' ? findPlayerId(item.name) : null;
-              
-              return (
-                <tr key={item.rank} style={item.rank === 1 ? styles.rankOneRow : {}}>
-                  <td style={styles.rankCol}>
-                    <span style={{
-                      ...styles.rankBadge,
-                      ...(item.rank === 1 ? styles.rankBadgeOne : {})
-                    }}>
-                      {item.rank}
-                    </span>
-                  </td>
-                  <td>
-                    {category === 'TEAMS' ? (
-                      <span style={styles.teamText}>{item.team}</span>
-                    ) : (
-                      playerId ? (
-                        <span 
-                          onClick={() => onPlayerClick(playerId)} 
-                          style={styles.playerLink}
-                        >
-                          {item.name}
-                        </span>
-                      ) : (
-                        <span style={styles.plainText}>{item.name}</span>
-                      )
-                    )}
-                  </td>
-                  {category === 'TEAMS' ? (
-                    <>
-                      <td style={styles.textRight}>{item.points.toLocaleString()}</td>
-                      <td style={{ ...styles.textRight, fontWeight: '700', color: 'var(--emerald)' }}>{item.rating}</td>
-                    </>
-                  ) : (
-                    <>
-                      <td style={{ color: 'var(--text-secondary)' }}>{item.team}</td>
-                      <td style={{ ...styles.textRight, fontWeight: '700', color: 'var(--teal)' }}>{item.rating}</td>
-                    </>
-                  )}
+        <div className="summary-table-wrapper" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={styles.table}>
+            <thead>
+              {category === 'TEAMS' ? (
+                <tr>
+                  <th style={{ width: '15%' }}>Rank</th>
+                  <th style={{ width: '45%' }}>Team</th>
+                  <th style={styles.textRight}>Points</th>
+                  <th style={styles.textRight}>Rating</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ) : (
+                <tr>
+                  <th style={{ width: '15%' }}>Rank</th>
+                  <th style={{ width: '45%' }}>Player Name</th>
+                  <th style={{ width: '25%' }}>Team</th>
+                  <th style={styles.textRight}>Rating</th>
+                </tr>
+              )}
+            </thead>
+            <tbody>
+              {rankingsData.map(item => {
+                const playerId = category !== 'TEAMS' ? findPlayerId(item.name) : null;
+                
+                return (
+                  <tr key={item.rank} style={item.rank === 1 ? styles.rankOneRow : {}}>
+                    <td style={styles.rankCol}>
+                      <span style={{
+                        ...styles.rankBadge,
+                        ...(item.rank === 1 ? styles.rankBadgeOne : {})
+                      }}>
+                        {item.rank}
+                      </span>
+                    </td>
+                    <td>
+                      {category === 'TEAMS' ? (
+                        <span style={styles.teamText}>{item.team}</span>
+                      ) : (
+                        playerId ? (
+                          <span 
+                            onClick={() => onPlayerClick(playerId)} 
+                            style={styles.playerLink}
+                          >
+                            {item.name}
+                          </span>
+                        ) : (
+                          <span style={styles.plainText}>{item.name}</span>
+                        )
+                      )}
+                    </td>
+                    {category === 'TEAMS' ? (
+                      <>
+                        <td style={styles.textRight}>{item.points.toLocaleString()}</td>
+                        <td style={{ ...styles.textRight, fontWeight: '700', color: 'var(--emerald)' }}>{item.rating}</td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ color: 'var(--text-secondary)' }}>{item.team}</td>
+                        <td style={{ ...styles.textRight, fontWeight: '700', color: 'var(--teal)' }}>{item.rating}</td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

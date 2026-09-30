@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, User, Shield, Briefcase, Zap } from 'lucide-react';
 
 export default function PlayerProfileModal({ player, teamName, onClose }) {
   if (!player) return null;
 
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   const { name, role, batting, bowling, stats } = player;
 
-  return (
+  return createPortal(
     <div style={styles.backdrop} onClick={onClose}>
-      <div style={styles.modal} className="glass-card fade-in" onClick={(e) => e.stopPropagation()}>
+      <div style={styles.modal} className="glass-card modal-content-responsive" onClick={(e) => e.stopPropagation()}>
         {/* Close Button */}
         <button style={styles.closeBtn} onClick={onClose}>
           <X size={18} />
@@ -130,7 +139,8 @@ export default function PlayerProfileModal({ player, teamName, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -141,23 +151,27 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.82)',
     backdropFilter: 'blur(8px)',
-    zIndex: 1000,
+    WebkitBackdropFilter: 'blur(8px)',
+    zIndex: 99999,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '1rem',
+    padding: '0.6rem',
   },
   modal: {
     width: '100%',
     maxWidth: '520px',
+    maxHeight: '92vh',
+    overflowY: 'auto',
     background: 'linear-gradient(135deg, #0e1726 0%, #070c14 100%)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '20px',
-    padding: '1.75rem',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '16px',
+    padding: '1.25rem',
     position: 'relative',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
+    boxSizing: 'border-box',
   },
   closeBtn: {
     position: 'absolute',
@@ -264,6 +278,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
+    width: '100%',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
   },
   tableTitle: {
     fontSize: '0.75rem',

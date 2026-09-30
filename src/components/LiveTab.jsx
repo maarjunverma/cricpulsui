@@ -152,7 +152,7 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
   };
 
   return (
-    <div style={styles.mainSplit} className="fade-in">
+    <div style={styles.mainSplit} className="live-main-split fade-in">
       <div style={styles.leftCol}>
       
         {/* Active Batsmen & Bowler Card */}
@@ -653,30 +653,40 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
 const styles = {
   mainSplit: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
     gap: '1.25rem',
     alignItems: 'start',
+    width: '100%',
   },
   leftCol: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    minWidth: 0,
+    width: '100%',
   },
   rightCol: {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    minWidth: 0,
+    width: '100%',
   },
   gridSection: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
     gap: '1rem',
+    width: '100%',
   },
   card: {
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+    overflowX: 'auto',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    WebkitOverflowScrolling: 'touch',
   },
   cardTitle: {
     fontSize: '0.9rem',

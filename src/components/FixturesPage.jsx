@@ -265,6 +265,9 @@ const styles = {
     padding: '3px',
     borderRadius: '10px',
     gap: '2px',
+    maxWidth: '100%',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
   },
   subTabBtn: {
     background: 'none',
@@ -276,6 +279,8 @@ const styles = {
     fontSize: '0.8rem',
     fontWeight: '600',
     transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   subTabBtnActive: {
     background: 'var(--emerald)',
@@ -284,8 +289,9 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
     gap: '1rem',
+    width: '100%',
   },
   card: {
     padding: '1.25rem',
@@ -293,6 +299,8 @@ const styles = {
     flexDirection: 'column',
     gap: '0.75rem',
     cursor: 'pointer',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   cardTop: {
     display: 'flex',

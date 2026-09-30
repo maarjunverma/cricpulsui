@@ -1428,24 +1428,57 @@ h1, h2, h3, h4, h5 {
   }
 
   .modal-content-responsive {
-    padding: 1.25rem 1rem !important;
-    margin: 0 0.5rem !important;
-    max-height: 85vh !important;
+    padding: 1.15rem 0.9rem !important;
+    margin: auto !important;
+    max-width: min(860px, 95vw) !important;
+    max-height: 92vh !important;
+    box-sizing: border-box !important;
   }
 
   /* Modal Dialogs */
   .modal-overlay {
-    padding: 0.75rem !important;
+    padding: 0.5rem !important;
+  }
+
+  .live-main-split {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+}
+
+/* ─── Tablets & Small Desktops (max-width: 640px) ─── */
+@media (max-width: 640px) {
+  .score-card {
+    min-width: min(280px, calc(100vw - 2.5rem)) !important;
+    max-width: min(320px, calc(100vw - 2.5rem)) !important;
+  }
+
+  .stats-bar-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+    padding: 0.65rem !important;
   }
 }
 
 /* ─── Ultra Small Phones (max-width: 380px) ─── */
 @media (max-width: 380px) {
+  .page-layout {
+    padding: 0.4rem !important;
+  }
+  .glass-card {
+    padding: 0.85rem !important;
+  }
   .logo-text {
     font-size: 1.25rem !important;
   }
   .score-card {
-    min-width: calc(92vw - 12px) !important;
+    min-width: calc(100vw - 1.5rem) !important;
+    max-width: calc(100vw - 1.5rem) !important;
+    padding: 0.75rem !important;
+  }
+  .tab-btn {
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.82rem !important;
   }
   .app-language-toggle {
     padding: 2px 4px !important;
@@ -1454,6 +1487,15 @@ h1, h2, h3, h4, h5 {
     font-size: 0.8rem !important;
     padding: 2px 5px !important;
   }
+}
+
+/* ─── Universal Card Overflow Protection ─── */
+.glass-card, 
+.score-card, 
+.fixture-match-card, 
+.sidebar-card {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* ─── Fixture Match Cards Hover & Touch Feedback ─── */

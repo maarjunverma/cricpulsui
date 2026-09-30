@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Users, 
@@ -20,6 +21,14 @@ import { getEnrichedMatchDetails } from '../services/matchDetailsHelper';
 
 export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerClick }) {
   if (!match) return null;
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const enrichedMatch = getEnrichedMatchDetails(match);
   const [activeTab, setActiveTab] = useState('squads'); // 'squads' | 'venue' | 'info'
@@ -47,11 +56,11 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
     return '#ef4444';
   };
 
-  return (
+  return createPortal(
     <div style={styles.backdrop} onClick={onClose} role="dialog" aria-modal="true">
       <div 
         style={styles.modal} 
-        className="glass-card fade-in" 
+        className="glass-card modal-content-responsive" 
         onClick={(e) => e.stopPropagation()}
       >
         {/* ─── Modal Top Bar ─── */}
@@ -610,7 +619,8 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -621,14 +631,14 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.78)',
+    background: 'rgba(0, 0, 0, 0.82)',
     backdropFilter: 'blur(10px)',
     WebkitBackdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10000,
-    padding: '1rem',
+    zIndex: 99999,
+    padding: '0.6rem',
   },
   modal: {
     background: 'linear-gradient(145deg, rgba(13, 27, 42, 0.98) 0%, rgba(10, 18, 28, 0.98) 100%)',
@@ -636,10 +646,10 @@ const styles = {
     borderRadius: '16px',
     width: '100%',
     maxWidth: '860px',
-    maxHeight: '90vh',
+    maxHeight: '92vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(16, 185, 129, 0.15)',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(16, 185, 129, 0.15)',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -647,7 +657,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '1rem 1.25rem',
+    padding: '0.85rem 1rem',
     borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
     background: 'rgba(0, 0, 0, 0.25)',
   },
@@ -863,7 +873,7 @@ const styles = {
   },
   squadsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
     gap: '1rem',
   },
   squadColCard: {
@@ -1080,7 +1090,7 @@ const styles = {
   },
   officialsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
     gap: '0.6rem',
     marginTop: '0.25rem',
   },
@@ -1172,13 +1182,14 @@ const styles = {
     fontWeight: '600',
   },
   modalFooter: {
-    padding: '1rem 1.25rem',
+    padding: '0.85rem 1rem',
     borderTop: '1px solid rgba(255, 255, 255, 0.08)',
     background: 'rgba(0, 0, 0, 0.3)',
     display: 'flex',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: '0.75rem',
+    gap: '0.6rem',
+    flexWrap: 'wrap',
   },
   reminderBtn: {
     display: 'inline-flex',

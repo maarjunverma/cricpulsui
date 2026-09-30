@@ -271,7 +271,7 @@ export default function SeriesPage({ onSelectMatch, setCurrentTab }) {
             <h2 style={styles.detailTitle}>{activeSeries.name}</h2>
             <p style={styles.detailDesc}>{activeSeries.description}</p>
 
-            <div style={styles.statsBar}>
+            <div className="stats-bar-grid" style={styles.statsBar}>
               <div style={styles.statBox}>
                 <span style={styles.statVal}>{activeSeries.teamsCount}</span>
                 <span style={styles.statLbl}>Teams</span>
