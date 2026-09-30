@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, Calendar, MapPin, ChevronRight, Award, Layers, Users, Star, ArrowUpRight } from 'lucide-react';
+import { Trophy, Calendar, MapPin, ChevronRight, ChevronDown, Award, Layers, Users, Star, ArrowUpRight } from 'lucide-react';
 
 const ALL_SERIES = [
   {
@@ -145,6 +145,18 @@ export default function SeriesPage({ onSelectMatch, setCurrentTab }) {
 
   const activeSeries = ALL_SERIES.find(s => s.id === activeSeriesId) || ALL_SERIES[0];
 
+  const handleSeriesClick = (id) => {
+    setActiveSeriesId(id);
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        const el = document.getElementById('series-details-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 50);
+    }
+  };
+
   return (
     <div style={styles.container}>
       {/* ─── Page Title Header ─── */}
@@ -188,7 +200,7 @@ export default function SeriesPage({ onSelectMatch, setCurrentTab }) {
             return (
               <div
                 key={s.id}
-                onClick={() => setActiveSeriesId(s.id)}
+                onClick={() => handleSeriesClick(s.id)}
                 style={{
                   ...styles.seriesCard,
                   ...(isSelected ? styles.seriesCardActive : {})
@@ -223,7 +235,15 @@ export default function SeriesPage({ onSelectMatch, setCurrentTab }) {
                   <span style={styles.teamLeader}>
                     {s.leadTeam}
                   </span>
-                  <ChevronRight size={16} color={isSelected ? 'var(--emerald)' : 'var(--text-muted)'} />
+                  {isSelected ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--emerald)', fontSize: '0.78rem', fontWeight: '700' }}>
+                      Viewing Details <ChevronDown size={16} />
+                    </span>
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.74rem' }}>
+                      Tap to View <ChevronRight size={15} />
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -231,7 +251,7 @@ export default function SeriesPage({ onSelectMatch, setCurrentTab }) {
         </div>
 
         {/* Right Active Series Details */}
-        <div style={styles.detailPane}>
+        <div style={styles.detailPane} id="series-details-section">
           <div style={styles.detailCard}>
             <div style={styles.detailHeader}>
               <div style={styles.detailBadge}>

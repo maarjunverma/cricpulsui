@@ -416,7 +416,7 @@ function App() {
       </div>
 
       {/* Footer */}
-      <footer style={footerStyle}>
+      <footer style={footerStyle} className="app-footer">
         <div className="full-width-inner" style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
             &copy; {new Date().getFullYear()} CricAi. All rights reserved. Live scores, AI commentary, and match statistics.

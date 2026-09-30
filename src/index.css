@@ -1102,37 +1102,75 @@ h1, h2, h3, h4, h5 {
 .brand-ai-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(20, 184, 166, 0.3));
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(20, 184, 166, 0.35));
   color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.4);
-  padding: 2px 7px;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  padding: 3px 9px;
   border-radius: 9999px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
-  margin-left: 4px;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+  margin-left: 6px;
+}
+
+/* ─── App Language Switcher ─── */
+.app-language-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 3px 6px;
+  gap: 4px;
+}
+
+.lang-opt-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.lang-opt-btn.active {
+  color: #ffffff;
+  background: var(--emerald);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.lang-divider {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.88rem;
 }
 
 /* ─── Mobile Bottom Navigation Bar (Docked on Mobile screens) ─── */
 .mobile-bottom-nav {
   display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 62px;
-  background: rgba(10, 14, 26, 0.96);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
-  z-index: 999;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 64px !important;
+  background: rgba(10, 14, 26, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.6) !important;
+  z-index: 9999 !important;
   justify-content: space-around;
   align-items: center;
   padding: 0 0.5rem;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .mobile-bottom-nav-item {
@@ -1146,8 +1184,8 @@ h1, h2, h3, h4, h5 {
   border: none;
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 0.68rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
   padding: 6px 2px;
   border-radius: 8px;
@@ -1171,21 +1209,23 @@ h1, h2, h3, h4, h5 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   transition: all 0.2s ease;
 }
 
 .mobile-bottom-nav-item.active .mobile-bottom-icon-wrap {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.18);
   color: var(--emerald);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
 
 .mobile-bottom-nav-label {
   letter-spacing: 0.02em;
   white-space: nowrap;
+  font-size: 0.78rem !important;
+  font-weight: 600;
 }
 
 .mobile-live-dot {
@@ -1220,6 +1260,9 @@ h1, h2, h3, h4, h5 {
 
 /* ─── Mobile Navbar & Header (max-width: 900px) ─── */
 @media (max-width: 900px) {
+  .logo-text {
+    font-size: 1.4rem !important;
+  }
   .desktop-nav {
     display: none !important;
   }
@@ -1227,26 +1270,34 @@ h1, h2, h3, h4, h5 {
     display: flex !important;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     color: var(--text-primary);
   }
   .nav-inner {
-    padding: 0.5rem 0.75rem !important;
+    padding: 0.6rem 0.85rem !important;
   }
 }
 
 /* ─── Smartphone / Handheld Devices (max-width: 768px) ─── */
 @media (max-width: 768px) {
+  body {
+    padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   #root {
-    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .app-footer {
+    padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .mobile-bottom-nav {
-    display: flex;
+    display: flex !important;
   }
 
   .full-width-inner {
@@ -1257,6 +1308,7 @@ h1, h2, h3, h4, h5 {
     grid-template-columns: 1fr !important;
     padding: 0.65rem 0.5rem !important;
     gap: 0.75rem !important;
+    padding-bottom: 2rem !important;
   }
 
   .page-layout .left-sidebar,
@@ -1292,21 +1344,21 @@ h1, h2, h3, h4, h5 {
 
   /* Ticker items */
   .ticker-item {
-    font-size: 0.85rem !important;
-    padding: 3px 8px !important;
+    font-size: 0.88rem !important;
+    padding: 4px 10px !important;
   }
   .ticker-team-text {
-    font-size: 0.85rem !important;
+    font-size: 0.88rem !important;
   }
 
   /* MatchCenter Title & Meta */
   .match-title-text {
-    font-size: clamp(1.1rem, 4.5vw, 1.45rem) !important;
+    font-size: clamp(1.15rem, 4.5vw, 1.45rem) !important;
     line-height: 1.3 !important;
   }
 
   .score-value-text {
-    font-size: clamp(1.35rem, 5.5vw, 1.8rem) !important;
+    font-size: clamp(1.4rem, 5.5vw, 1.85rem) !important;
   }
 
   .team-score-block {
@@ -1321,8 +1373,8 @@ h1, h2, h3, h4, h5 {
   }
 
   .tab-btn {
-    padding: 0.6rem 0.85rem !important;
-    font-size: 0.82rem !important;
+    padding: 0.65rem 0.95rem !important;
+    font-size: 0.88rem !important;
   }
 
   /* Tables inside scorecard & summary */
@@ -1334,8 +1386,8 @@ h1, h2, h3, h4, h5 {
   }
 
   table th, table td {
-    padding: 0.5rem 0.35rem !important;
-    font-size: 0.78rem !important;
+    padding: 0.55rem 0.4rem !important;
+    font-size: 0.82rem !important;
     white-space: nowrap;
   }
 
@@ -1364,12 +1416,15 @@ h1, h2, h3, h4, h5 {
 
   .series-layout-grid {
     grid-template-columns: 1fr !important;
-    gap: 1rem !important;
+    gap: 1.25rem !important;
+    margin-bottom: 3rem !important;
+    padding-bottom: 2rem !important;
   }
 
   .news-grid-responsive {
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
+    margin-bottom: 2.5rem !important;
   }
 
   .modal-content-responsive {
@@ -1387,7 +1442,7 @@ h1, h2, h3, h4, h5 {
 /* ─── Ultra Small Phones (max-width: 380px) ─── */
 @media (max-width: 380px) {
   .logo-text {
-    font-size: 1.15rem !important;
+    font-size: 1.25rem !important;
   }
   .score-card {
     min-width: calc(92vw - 12px) !important;
@@ -1396,7 +1451,7 @@ h1, h2, h3, h4, h5 {
     padding: 2px 4px !important;
   }
   .lang-opt-btn {
-    font-size: 0.7rem !important;
+    font-size: 0.8rem !important;
     padding: 2px 5px !important;
   }
 }

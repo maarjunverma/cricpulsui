@@ -251,9 +251,9 @@ export default function Header({
           {/* Logo */}
           <div style={styles.logoContainer} onClick={() => { setCurrentTab('live'); setMobileMenuOpen(false); }}>
             <div style={styles.logoIcon}>
-              <Zap size={20} color="#10b981" />
+              <Zap size={22} color="#10b981" />
             </div>
-            <span style={styles.logoText}>
+            <span style={styles.logoText} className="logo-text">
               CRIC<span style={styles.logoHighlight}>AI</span>
             </span>
             <span className="brand-ai-badge">AI 2.0</span>
@@ -314,7 +314,7 @@ export default function Header({
               style={styles.mobileMenuBtn}
               aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
@@ -323,8 +323,8 @@ export default function Header({
         {mobileMenuOpen && (
           <div style={styles.mobileNavDropdown}>
             {/* Mobile App Language Switcher */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '6px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>App Language</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '6px' }}>
+              <span style={{ fontSize: '0.92rem', fontWeight: '600', color: 'var(--text-muted)' }}>App Language</span>
               <div className="app-language-toggle">
                 <button
                   type="button"
@@ -362,7 +362,7 @@ export default function Header({
                     ...(isActive ? styles.mobileNavBtnActive : {})
                   }}
                 >
-                  <Icon size={16} />
+                  <Icon size={20} />
                   {item.label}
                 </button>
               );
@@ -721,7 +721,7 @@ const styles = {
     justifyContent: 'center',
   },
   logoText: {
-    fontSize: '1.3rem',
+    fontSize: '1.55rem',
     fontWeight: '800',
     fontFamily: 'var(--font-heading)',
     color: '#fff',
@@ -732,7 +732,7 @@ const styles = {
   },
   desktopNav: {
     display: 'flex',
-    gap: '0.4rem',
+    gap: '0.6rem',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -741,9 +741,9 @@ const styles = {
     background: 'transparent',
     border: '1px solid transparent',
     color: '#94a3b8',
-    padding: '0.45rem 1.1rem',
-    fontSize: '0.92rem',
-    fontWeight: '500',
+    padding: '0.55rem 1.25rem',
+    fontSize: '1.05rem',
+    fontWeight: '600',
     cursor: 'pointer',
     fontFamily: 'var(--font-body)',
     borderRadius: '8px',
@@ -751,10 +751,10 @@ const styles = {
   },
   navBtnActive: {
     color: '#ffffff',
-    background: 'rgba(16, 185, 129, 0.12)',
+    background: 'rgba(16, 185, 129, 0.15)',
     border: '1px solid var(--emerald)',
-    boxShadow: '0 0 14px rgba(16, 185, 129, 0.3)',
-    fontWeight: '600',
+    boxShadow: '0 0 16px rgba(16, 185, 129, 0.35)',
+    fontWeight: '700',
     borderRadius: '8px',
   },
   rightControls: {
@@ -865,14 +865,14 @@ const styles = {
     background: 'none',
     border: '1px solid transparent',
     color: 'var(--text-secondary)',
-    padding: '0.75rem 1rem',
-    fontSize: '0.9rem',
+    padding: '0.85rem 1.15rem',
+    fontSize: '1.05rem',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
+    gap: '0.85rem',
     borderRadius: '8px',
-    fontWeight: '500',
+    fontWeight: '600',
     textAlign: 'left',
     transition: 'all 0.2s ease',
   },
