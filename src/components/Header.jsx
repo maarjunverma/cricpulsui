@@ -125,6 +125,9 @@ export default function Header({
 
     let rAF = null;
     const onScrollOrResize = () => {
+      if (window.innerWidth > 992) {
+        setMobileMenuOpen(false);
+      }
       if (rAF) cancelAnimationFrame(rAF);
       rAF = requestAnimationFrame(() => {
         updateScrollInfo();
@@ -256,6 +259,7 @@ export default function Header({
             <span style={styles.logoText} className="logo-text">
               CRIC<span style={styles.logoHighlight}>AI</span>
             </span>
+            <span className="brand-ai-badge">AI 2.0</span>
           </div>
 
           {/* Desktop Nav Links */}
@@ -285,6 +289,27 @@ export default function Header({
 
           {/* Right Controls */}
           <div style={styles.rightControls}>
+            {/* App Language Switcher (EN | HI) */}
+            <div className="app-language-toggle">
+              <button
+                type="button"
+                className={`lang-opt-btn ${appLanguage === 'en' ? 'active' : ''}`}
+                onClick={() => onLanguageChange && onLanguageChange('en')}
+                title="Switch app language to English"
+              >
+                EN
+              </button>
+              <span className="lang-divider">|</span>
+              <button
+                type="button"
+                className={`lang-opt-btn ${appLanguage === 'hi' ? 'active' : ''}`}
+                onClick={() => onLanguageChange && onLanguageChange('hi')}
+                title="Switch app language to Hindi (हिंदी)"
+              >
+                HI
+              </button>
+            </div>
+
             {/* Mobile menu toggle */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -299,7 +324,7 @@ export default function Header({
 
         {/* Mobile Nav Dropdown */}
         {mobileMenuOpen && (
-          <div style={styles.mobileNavDropdown}>
+          <div style={styles.mobileNavDropdown} className="mobile-nav-dropdown">
             {/* Mobile App Language Switcher */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '6px' }}>
               <span style={{ fontSize: '0.92rem', fontWeight: '600', color: 'var(--text-muted)' }}>App Language</span>

@@ -1514,5 +1514,13 @@ h1, h2, h3, h4, h5 {
   transform: scale(0.99);
 }
 
+/* Ensure mobile menu drawer never renders on desktop */
+@media (min-width: 993px) {
+  .mobile-menu-btn,
+  .mobile-nav-dropdown {
+    display: none !important;
+  }
+}
+
 
 
