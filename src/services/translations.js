@@ -2,6 +2,10 @@
 export const UI_TRANSLATIONS = {
   en: {
     appName: 'CricAi',
+    copyrightNotice: '© 2026 CricAi. All rights reserved.',
+    legalDisclaimer: 'Live scores, AI pulse commentary, and match statistics.',
+    copyrightAndTerms: 'Copyright & Legal Terms',
+    fairUseNotice: 'Team crests and tournament marks are trademarks of their respective boards (ICC, BCCI). Nominative fair use reporting.',
     // Navigation
     home: 'Home',
     schedule: 'Schedule',
@@ -20,7 +24,7 @@ export const UI_TRANSLATIONS = {
     
     // MatchCenter Tabs
     summary: 'Summary',
-    aiCommentary: 'AI Commentary 🎙️',
+    aiCommentary: 'Gemini AI Commentary ⚡',
     scorecard: 'Scorecard',
     info: 'Info',
     analytics: 'Analytics',
@@ -80,6 +84,10 @@ export const UI_TRANSLATIONS = {
   },
   hi: {
     appName: 'क्रिकएआई',
+    copyrightNotice: '© 2026 क्रिकएआई. सर्वाधिकार सुरक्षित।',
+    legalDisclaimer: 'लाइव स्कोर, एआई पल्स कमेंट्री और मैच आंकड़े।',
+    copyrightAndTerms: 'कॉपीराइट और कानूनी शर्तें',
+    fairUseNotice: 'टीम लोगो और टूर्नामेंट नाम संबंधित बोर्ड (ICC, BCCI) के ट्रेडमार्क हैं।',
     // Navigation
     home: 'होम',
     schedule: 'शेड्यूल',
@@ -98,7 +106,7 @@ export const UI_TRANSLATIONS = {
     
     // MatchCenter Tabs
     summary: 'सारांश',
-    aiCommentary: 'एआई कमेंट्री 🎙️',
+    aiCommentary: 'जेमिनी एआई कमेंट्री ⚡',
     scorecard: 'स्कोरकार्ड',
     info: 'जानकारी',
     analytics: 'एनालिटिक्स',

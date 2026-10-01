@@ -19,6 +19,9 @@ import {
 } from './services/apiService';
 import './App.css';
 import { getUIText } from './services/translations';
+import CricPulsLogo from './components/CricPulsLogo';
+import CopyrightModal from './components/CopyrightModal';
+import { AndroidIcon, AppleIcon, CopyrightShieldIcon, VerifiedPulseBadge } from './components/CricPulsIcons';
 
 
 // Popular Series (static mock data for left sidebar)
@@ -57,6 +60,7 @@ function App() {
   const [appLanguage, setAppLanguage] = useState(() => {
     return localStorage.getItem('cricpuls_app_language') || 'en';
   });
+  const [isCopyrightModalOpen, setIsCopyrightModalOpen] = useState(false);
 
   const handleLanguageChange = (newLang) => {
     const lang = newLang === 'hi' ? 'hi' : 'en';
@@ -326,6 +330,34 @@ function App() {
 
         {/* ─── Main Content ─── */}
         <main className="main-content">
+          {/* SEO Semantic Header (Boosts Google Keyword Ranking for CricAi & Live Scores) */}
+          <div className="seo-hero-heading" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0.5rem 0.85rem',
+            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.18)',
+            borderRadius: '10px',
+            marginBottom: '0.85rem',
+            fontSize: '0.8rem',
+            color: '#94a3b8'
+          }}>
+            <h1 style={{
+              fontSize: '0.86rem',
+              fontWeight: '700',
+              color: '#f8fafc',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{ color: '#10b981' }}>⚡ CricAi:</span> Fastest Live Cricket Scores &amp; Ball-by-Ball AI Commentary
+            </h1>
+            <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: '600' }}>
+              IPL 2026 • ICC Tournaments • Instant Ball Pulse
+            </span>
+          </div>
           {currentTab === 'live' && (
             <MatchCenter 
               match={selectedMatch} 
@@ -373,16 +405,50 @@ function App() {
         {/* ─── Right Sidebar ─── */}
         <aside className="right-sidebar">
           <div className="sidebar-card">
-            <h3>{getUIText('downloadApp', appLanguage)}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0 }}>{getUIText('downloadApp', appLanguage)}</h3>
+              <VerifiedPulseBadge size={16} />
+            </div>
+
+            {/* Official App Emblem Card */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '8px 10px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.05))',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              borderRadius: '8px',
+              marginBottom: '0.75rem'
+            }}>
+              <CricPulsLogo variant="icon" size={34} glow={true} animated={false} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.86rem', fontWeight: '800', color: '#fff', letterSpacing: '-0.02em' }}>
+                  CricAi Mobile
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#34d399', fontWeight: '600' }}>
+                  ● Live Ball Alert &amp; Audio
+                </span>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <a href="#" style={sidebarStyles.downloadLink}>
-                <span style={sidebarStyles.downloadIcon}>▶</span>
-                <span>Android App</span>
+              <a 
+                href="#download-android" 
+                style={sidebarStyles.downloadLink} 
+                onClick={(e) => { e.preventDefault(); alert("CricAi Android APK is currently in preview build."); }}
+              >
+                <AndroidIcon size={18} />
+                <span>Android App (.apk)</span>
                 <span style={sidebarStyles.externalArrow}>↗</span>
               </a>
-              <a href="#" style={sidebarStyles.downloadLink}>
-                <span style={sidebarStyles.downloadIcon}></span>
-                <span>iOS App</span>
+              <a 
+                href="#download-ios" 
+                style={sidebarStyles.downloadLink} 
+                onClick={(e) => { e.preventDefault(); alert("CricAi iOS App will be available on the App Store soon!"); }}
+              >
+                <AppleIcon size={18} />
+                <span>iOS App (Apple)</span>
                 <span style={sidebarStyles.externalArrow}>↗</span>
               </a>
             </div>
@@ -431,14 +497,122 @@ function App() {
         </aside>
       </div>
 
-      {/* Footer */}
+      {/* Enhanced CricPuls Brand Footer with Copyrights & Legal Protection */}
       <footer style={footerStyle} className="app-footer">
-        <div className="full-width-inner" style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-            &copy; {new Date().getFullYear()} CricAi. All rights reserved. Live scores, AI commentary, and match statistics.
-          </p>
+        <div className="full-width-inner" style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 1rem' }}>
+          {/* Main Footer Row */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: '1.75rem',
+            paddingBottom: '1.5rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}>
+            {/* Left: Brand Identity */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '380px' }}>
+              <CricPulsLogo variant="footer" size={38} />
+              <p style={{ color: 'var(--text-muted, #94a3b8)', fontSize: '0.8rem', lineHeight: '1.55', margin: '4px 0 0 0' }}>
+                Next-generation real-time cricket platform delivering the fastest ball-by-ball pulse tracker, AI commentary, and tournament intelligence.
+              </p>
+            </div>
+
+            {/* Middle: Navigation shortcuts */}
+            <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
+              <div>
+                <h4 style={{ color: '#fff', fontSize: '0.82rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
+                  Platform
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.8rem' }}>
+                  <span style={{ color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }} onClick={() => setCurrentTab('live')}>Live Scores</span>
+                  <span style={{ color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }} onClick={() => setCurrentTab('fixtures')}>Schedule &amp; Fixtures</span>
+                  <span style={{ color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }} onClick={() => setCurrentTab('series')}>Major Series</span>
+                  <span style={{ color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }} onClick={() => setCurrentTab('rankings')}>ICC Rankings</span>
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ color: '#fff', fontSize: '0.82rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
+                  Legal &amp; Trust
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.8rem' }}>
+                  <button 
+                    onClick={() => setIsCopyrightModalOpen(true)}
+                    style={{ background: 'none', border: 'none', padding: 0, color: '#34d399', cursor: 'pointer', textAlign: 'left', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px' }}
+                  >
+                    <CopyrightShieldIcon size={14} />
+                    Copyright &amp; IP Notice
+                  </button>
+                  <button 
+                    onClick={() => setIsCopyrightModalOpen(true)}
+                    style={{ background: 'none', border: 'none', padding: 0, color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    Fair Use Disclaimer
+                  </button>
+                  <button 
+                    onClick={() => setIsCopyrightModalOpen(true)}
+                    style={{ background: 'none', border: 'none', padding: 0, color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    DMCA / Contact Legal
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Copyright Bar */}
+          <div style={{
+            paddingTop: '1.25rem',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            fontSize: '0.76rem',
+            color: 'var(--text-muted, #94a3b8)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span>
+                &copy; {new Date().getFullYear()} <strong>CricAi™</strong>. All rights reserved.
+              </span>
+              <span style={{ opacity: 0.4 }}>•</span>
+              <span style={{ color: '#64748b' }}>
+                All match marks, tournament names, and team crests belong to their respective governing bodies (ICC/BCCI).
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button 
+                onClick={() => setIsCopyrightModalOpen(true)}
+                style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#34d399',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '0.72rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <CopyrightShieldIcon size={13} />
+                Copyright Terms
+              </button>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>v2.4.0</span>
+            </div>
+          </div>
         </div>
       </footer>
+
+      {/* Copyright & Legal Modal */}
+      <CopyrightModal 
+        isOpen={isCopyrightModalOpen} 
+        onClose={() => setIsCopyrightModalOpen(false)} 
+      />
 
       {/* Player Profile Detail Dialog Overlay */}
       {selectedPlayerId && (
@@ -453,9 +627,10 @@ function App() {
 }
 
 const footerStyle = {
-  padding: '1.5rem 0',
-  borderTop: '1px solid var(--border-color)',
-  background: 'var(--bg-secondary)',
+  padding: '2.5rem 0 1.5rem 0',
+  borderTop: '1px solid rgba(16, 185, 129, 0.2)',
+  background: 'linear-gradient(180deg, rgba(10, 14, 26, 0.95) 0%, rgba(5, 8, 15, 0.98) 100%)',
+  marginTop: '2rem',
 };
 
 const sidebarStyles = {

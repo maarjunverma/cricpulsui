@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Disallow internal API paths or widget endpoints from scraping
+Disallow: /api/
+Disallow: /strapi/
+
+# Googlebot specific directives
+User-agent: Googlebot
+Allow: /
+
+# Sitemap location
+Sitemap: https://cricai.live/sitemap.xml

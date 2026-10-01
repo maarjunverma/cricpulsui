@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- CricPuls Standalone Vector Icon Emblem - Copyright (c) 2026 CricPuls -->
+  <defs>
+    <radialGradient id="cpIconBallGrad" cx="36%" cy="32%" r="68%">
+      <stop offset="0%" stopColor="#1e293b" />
+      <stop offset="45%" stopColor="#0f172a" />
+      <stop offset="85%" stopColor="#090d16" />
+      <stop offset="100%" stopColor="#030712" />
+    </radialGradient>
+    <linearGradient id="cpIconRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#06b6d4" />
+      <stop offset="50%" stopColor="#10b981" />
+      <stop offset="100%" stopColor="#059669" />
+    </linearGradient>
+    <linearGradient id="cpIconPulseGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stopColor="#06b6d4" />
+      <stop offset="35%" stopColor="#22d3ee" />
+      <stop offset="65%" stopColor="#34d399" />
+      <stop offset="100%" stopColor="#10b981" />
+    </linearGradient>
+    <linearGradient id="cpIconSeamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#34d399" />
+      <stop offset="100%" stopColor="#059669" />
+    </linearGradient>
+    <filter id="cpIconGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <clipPath id="cpIconClip">
+      <circle cx="50" cy="50" r="42" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer Neon Atmospheric Aura -->
+  <circle cx="50" cy="50" r="46" stroke="url(#cpIconRingGrad)" stroke-width="1.8" opacity="0.6" stroke-dasharray="4 2" />
+
+  <!-- Ball Sphere -->
+  <circle cx="50" cy="50" r="42" fill="url(#cpIconBallGrad)" stroke="url(#cpIconRingGrad)" stroke-width="2.5" />
+
+  <!-- Sphere Specular Glare -->
+  <ellipse cx="38" cy="28" rx="18" ry="10" fill="#ffffff" opacity="0.14" transform="rotate(-25 38 28)" />
+
+  <!-- Cricket Ball Seams -->
+  <g clip-path="url(#cpIconClip)">
+    <path d="M 12 88 Q 50 50 88 12" stroke="url(#cpIconSeamGrad)" stroke-width="6" stroke-opacity="0.25" fill="none" />
+    <path d="M 12 88 Q 50 50 88 12" stroke="#0f172a" stroke-width="2" fill="none" />
+    <g stroke="#34d399" stroke-width="1.8" opacity="0.65" stroke-linecap="round">
+      <line x1="20" y1="84" x2="24" y2="80" />
+      <line x1="28" y1="76" x2="32" y2="72" />
+      <line x1="36" y1="68" x2="40" y2="64" />
+      <line x1="60" y1="44" x2="64" y2="40" />
+      <line x1="68" y1="36" x2="72" y2="32" />
+      <line x1="76" y1="28" x2="80" y2="24" />
+    </g>
+    <g stroke="#06b6d4" stroke-width="1.8" opacity="0.65" stroke-linecap="round">
+      <line x1="16" y1="80" x2="20" y2="76" />
+      <line x1="24" y1="72" x2="28" y2="68" />
+      <line x1="32" y1="64" x2="36" y2="60" />
+      <line x1="64" y1="40" x2="68" y2="36" />
+      <line x1="72" y1="32" x2="76" y2="28" />
+      <line x1="80" y1="24" x2="84" y2="20" />
+    </g>
+  </g>
+
+  <!-- Pulse Waveform -->
+  <g filter="url(#cpIconGlow)">
+    <path d="M 10 50 L 32 50 L 39 37 L 46 66 L 54 18 L 62 76 L 68 44 L 74 54 L 79 50 L 90 50" 
+      stroke="url(#cpIconPulseGrad)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <circle cx="54" cy="18" r="3" fill="#ffffff" />
+    <circle cx="62" cy="76" r="2.5" fill="#38bdf8" />
+    <circle cx="90" cy="50" r="2" fill="#34d399" />
+  </g>
+</svg>

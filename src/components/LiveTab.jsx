@@ -1,121 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Copy, Check, MoreVertical, X, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, Copy, Check, X, SlidersHorizontal, Bot, BrainCircuit, Send } from 'lucide-react';
 import CricketField from './CricketField';
+import TeamFlag from './TeamFlag';
 import { playBallEvent } from '../services/audioService';
 import {
-  SUPPORTED_LANGUAGES,
-  COMMENTARY_PERSONAS,
-  generateRegionalBallCommentary,
-  generateAIOverSummary,
-  speakRegionalCommentary,
-  stopSpeech,
-  isSpeechActive
-} from '../services/aiCommentaryService';
+  generateGeminiBallCommentary,
+  askGeminiCricketQuestion,
+  getGeminiApiKey,
+  setGeminiApiKey
+} from '../services/geminiCommentaryService';
 import { getUIText } from '../services/translations';
 
 export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLanguageChange }) {
-  // Commentary language is driven directly by the user's App Language selection (English or Hindi)
   const selectedLang = appLanguage === 'hi' ? 'hi' : 'en';
 
-  const [selectedPersona, setSelectedPersona] = useState(() => {
-    return localStorage.getItem('cricpuls_comm_persona') || 'hype';
-  });
-  const [autoSpeak, setAutoSpeak] = useState(() => {
-    return localStorage.getItem('cricpuls_comm_autospeak') === 'true';
-  });
-  const [speechRate, setSpeechRate] = useState(1.0);
-  const [speechPitch, setSpeechPitch] = useState(1.0);
-  const [showSettings, setShowSettings] = useState(false);
-  const [activeSpeakingBall, setActiveSpeakingBall] = useState(null);
   const [copiedBall, setCopiedBall] = useState(null);
-  const [showOriginalEnglish, setShowOriginalEnglish] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState(() => getGeminiApiKey());
+  const [apiKeySaved, setApiKeySaved] = useState(false);
 
-  // Stop active speech if language switches
-  useEffect(() => {
-    stopSpeech();
-    setActiveSpeakingBall(null);
-  }, [selectedLang]);
+  // Gemini Interactive Question State
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [geminiAnswer, setGeminiAnswer] = useState(null);
+  const [isGeminiThinking, setIsGeminiThinking] = useState(false);
+
+  // Gemini Commentary Feed State
+  const [geminiCommentaryList, setGeminiCommentaryList] = useState([]);
 
   // Sound effects triggered ball-by-ball
   useEffect(() => {
     if (match?.lastBall) {
       playBallEvent(match.lastBall.event);
+    }
+  }, [match?.lastBall]);
 
-      // Auto speak newest ball in selected language if enabled
-      if (autoSpeak && match.commentary && match.commentary.length > 0) {
-        const latestComm = match.commentary[0];
-        const regional = generateRegionalBallCommentary(latestComm, selectedLang, selectedPersona, match);
-        setActiveSpeakingBall(latestComm.ball);
-        speakRegionalCommentary({
-          text: regional.nativeText,
-          phoneticText: regional.phoneticText,
-          langCode: selectedLang,
-          rate: speechRate,
-          pitch: speechPitch,
-          onStart: () => setActiveSpeakingBall(latestComm.ball),
-          onEnd: () => setActiveSpeakingBall(null),
-          onError: () => setActiveSpeakingBall(null)
-        });
+  // Generate Gemini text commentary whenever match commentary updates
+  useEffect(() => {
+    if (!match?.commentary || match.commentary.length === 0) return;
+
+    let active = true;
+
+    async function loadGeminiCommentary() {
+      const matchContext = `${match.team1?.shortName || 'T1'} vs ${match.team2?.shortName || 'T2'}, Over ${match.overs || '0.0'}, Win Prob: ${match.winProbability || 50}%`;
+      const bowler = match.bowling?.active?.name || 'Bowler';
+      const batter = match.batting?.striker?.name || 'Batter';
+
+      const results = await Promise.all(
+        match.commentary.slice(0, 15).map(async (comm) => {
+          const isWkt = comm.category === 'W' || String(comm.event).toUpperCase().includes('W');
+          const runs = comm.category === '6' ? 6 : comm.category === '4' ? 4 : parseInt(comm.event, 10) || 0;
+
+          const geminiData = await generateGeminiBallCommentary({
+            ball: comm.ball,
+            event: comm.event || comm.category || '0',
+            runs,
+            isWicket: isWkt,
+            bowlerName: bowler,
+            batterName: batter,
+            matchSituation: matchContext,
+            language: selectedLang,
+            apiKey: apiKeyInput
+          });
+
+          return {
+            ...comm,
+            geminiText: geminiData.text,
+            tactics: geminiData.tactics,
+            winShift: geminiData.winShift,
+            source: geminiData.source
+          };
+        })
+      );
+
+      if (active) {
+        setGeminiCommentaryList(results);
       }
     }
-  }, [match?.lastBall, autoSpeak, selectedLang, selectedPersona, speechRate, speechPitch]);
 
-  // Cleanup speech when tab unmounts
-  useEffect(() => {
+    loadGeminiCommentary();
+
     return () => {
-      stopSpeech();
+      active = false;
     };
-  }, []);
+  }, [match?.commentary, selectedLang, apiKeyInput]);
 
-  const handleLangChange = (langCode) => {
-    const validLang = langCode === 'hi' ? 'hi' : 'en';
-    if (onLanguageChange) {
-      onLanguageChange(validLang);
-    }
-    stopSpeech();
-    setActiveSpeakingBall(null);
-  };
-
-  const handlePersonaChange = (personaId) => {
-    setSelectedPersona(personaId);
-    localStorage.setItem('cricpuls_comm_persona', personaId);
-  };
-
-  const handleToggleAutoSpeak = () => {
-    const nextVal = !autoSpeak;
-    setAutoSpeak(nextVal);
-    localStorage.setItem('cricpuls_comm_autospeak', String(nextVal));
-    if (!nextVal) {
-      stopSpeech();
-      setActiveSpeakingBall(null);
-    }
-  };
-
-  const handleSpeakBall = (commItem, regional) => {
-    if (activeSpeakingBall === commItem.ball) {
-      stopSpeech();
-      setActiveSpeakingBall(null);
-      return;
-    }
-
-    setActiveSpeakingBall(commItem.ball);
-    speakRegionalCommentary({
-      text: regional.nativeText,
-      phoneticText: regional.phoneticText,
-      langCode: selectedLang,
-      rate: speechRate,
-      pitch: speechPitch,
-      onStart: () => setActiveSpeakingBall(commItem.ball),
-      onEnd: () => setActiveSpeakingBall(null),
-      onError: () => setActiveSpeakingBall(null)
-    });
-  };
-
-  const handleSpeakLatest = () => {
-    if (!match?.commentary || match.commentary.length === 0) return;
-    const latest = match.commentary[0];
-    const regional = generateRegionalBallCommentary(latest, selectedLang, selectedPersona, match);
-    handleSpeakBall(latest, regional);
+  const handleSaveApiKey = () => {
+    setGeminiApiKey(apiKeyInput);
+    setApiKeySaved(true);
+    setTimeout(() => setApiKeySaved(false), 2500);
   };
 
   const handleCopyCommentary = (text, ballKey) => {
@@ -124,6 +96,21 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
     setTimeout(() => {
       setCopiedBall(null);
     }, 2000);
+  };
+
+  const handleAskGemini = async (promptQuery) => {
+    const q = promptQuery || customQuestion;
+    if (!q || !q.trim()) return;
+
+    setIsGeminiThinking(true);
+    setGeminiAnswer(null);
+
+    const matchContext = `${match?.team1?.name} vs ${match?.team2?.name}, Score: ${match?.score?.team1?.runs || 0}/${match?.score?.team1?.wickets || 0} vs ${match?.score?.team2?.runs || 0}/${match?.score?.team2?.wickets || 0}, Overs: ${match?.overs || 0}, Batter: ${match?.batting?.striker?.name || 'Active'}, Bowler: ${match?.bowling?.active?.name || 'Active'}`;
+    const answer = await askGeminiCricketQuestion(q, matchContext, apiKeyInput);
+    
+    setIsGeminiThinking(false);
+    setGeminiAnswer({ question: q, answer });
+    setCustomQuestion('');
   };
 
   if (!match) {
@@ -140,69 +127,69 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
   const nonStriker = batting?.nonStriker;
   const activeBowler = bowling?.active;
 
-  const currentLangObj = SUPPORTED_LANGUAGES.find(l => l.code === selectedLang) || SUPPORTED_LANGUAGES[0];
-  const aiOverSummary = generateAIOverSummary(match, selectedLang);
-
-  const getBallClass = (ballEvent) => {
-    if (ballEvent === '4') return 'four';
-    if (ballEvent === '6') return 'six';
-    if (ballEvent === 'W') return 'wicket';
-    if (ballEvent === 'Wd' || ballEvent === 'Nb') return 'extras';
-    return '';
+  const getBallClass = (ball) => {
+    if (ball === 'W') return 'ball-w';
+    if (ball === '4') return 'ball-4';
+    if (ball === '6') return 'ball-6';
+    if (ball === '0') return 'ball-0';
+    return 'ball-runs';
   };
 
   return (
-    <div style={styles.mainSplit} className="live-main-split fade-in">
-      <div style={styles.leftCol}>
-      
-        {/* Active Batsmen & Bowler Card */}
-        <div style={styles.gridSection}>
-          {/* Batsmen Box */}
-          <div style={styles.card} className="glass-card">
-            <h4 style={styles.cardTitle}>{getUIText('batting', appLanguage)}</h4>
+    <div style={styles.container} className="fade-in">
+      {/* 2D Interactive Pitch Visualization */}
+      <div style={styles.fieldSection} className="glass-card">
+        <CricketField lastBall={match.lastBall} />
+      </div>
+
+      <div style={styles.infoSection}>
+        {/* Batsmen / Bowler Active Stats Card */}
+        <div style={styles.scoreOverview} className="glass-card">
+          <div style={styles.tableResponsive}>
             <table style={styles.table}>
               <thead>
-                <tr>
-                  <th>{getUIText('batter', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('runs', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('balls', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('fours', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('sixes', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('strikeRate', appLanguage)}</th>
+                <tr style={styles.thRow}>
+                  <th style={styles.th}>{getUIText('batter', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('runs', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('balls', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('fours', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('sixes', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('strikeRate', appLanguage)}</th>
                 </tr>
               </thead>
               <tbody>
                 {striker && (
-                  <tr style={styles.activeRow}>
+                  <tr style={styles.trActive}>
                     <td 
-                      onClick={() => onPlayerClick(striker.id)} 
-                      style={styles.playerLink}
+                      style={styles.tdPlayerLink}
+                      onClick={() => onPlayerClick && onPlayerClick(striker.id)}
                     >
-                      {striker.name} <span style={styles.strikerDot}>*</span>
+                      <span style={{ color: 'var(--emerald)', marginRight: '4px' }}>*</span>
+                      {striker.name}
                     </td>
-                    <td style={{...styles.textRight, fontWeight: '700'}}>{striker.runs}</td>
+                    <td style={{...styles.textRight, fontWeight: '700', color: 'var(--text-primary)'}}>{striker.runs}</td>
                     <td style={styles.textRight}>{striker.balls}</td>
                     <td style={styles.textRight}>{striker.fours}</td>
                     <td style={styles.textRight}>{striker.sixes}</td>
-                    <td style={{...styles.textRight, color: 'var(--teal)'}}>
-                      {striker.balls > 0 ? ((striker.runs / striker.balls) * 100).toFixed(1) : '0.0'}
+                    <td style={{...styles.textRight, color: 'var(--emerald)'}}>
+                      {striker.balls > 0 ? ((striker.runs / striker.balls) * 100).toFixed(1) : (striker.sr || '0.0')}
                     </td>
                   </tr>
                 )}
                 {nonStriker && (
-                  <tr>
+                  <tr style={styles.tr}>
                     <td 
-                      onClick={() => onPlayerClick(nonStriker.id)} 
-                      style={styles.playerLink}
+                      style={styles.tdPlayerLink}
+                      onClick={() => onPlayerClick && onPlayerClick(nonStriker.id)}
                     >
                       {nonStriker.name}
                     </td>
-                    <td style={{...styles.textRight, fontWeight: '600'}}>{nonStriker.runs}</td>
+                    <td style={{...styles.textRight, fontWeight: '700'}}>{nonStriker.runs}</td>
                     <td style={styles.textRight}>{nonStriker.balls}</td>
                     <td style={styles.textRight}>{nonStriker.fours}</td>
                     <td style={styles.textRight}>{nonStriker.sixes}</td>
-                    <td style={{...styles.textRight, color: 'var(--text-secondary)'}}>
-                      {nonStriker.balls > 0 ? ((nonStriker.runs / nonStriker.balls) * 100).toFixed(1) : '0.0'}
+                    <td style={{...styles.textRight, color: 'var(--emerald)'}}>
+                      {nonStriker.balls > 0 ? ((nonStriker.runs / nonStriker.balls) * 100).toFixed(1) : (nonStriker.sr || '0.0')}
                     </td>
                   </tr>
                 )}
@@ -217,26 +204,24 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
             </table>
           </div>
 
-          {/* Bowler Box */}
-          <div style={styles.card} className="glass-card">
-            <h4 style={styles.cardTitle}>{getUIText('bowling', appLanguage)}</h4>
+          <div style={{ ...styles.tableResponsive, marginTop: '1rem' }}>
             <table style={styles.table}>
               <thead>
-                <tr>
-                  <th>{getUIText('bowler', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('overs', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('maidens', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('runs', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('wickets', appLanguage)}</th>
-                  <th style={styles.textRight}>{getUIText('economy', appLanguage)}</th>
+                <tr style={styles.thRow}>
+                  <th style={styles.th}>{getUIText('bowler', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('overs', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('maidens', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('runs', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('wickets', appLanguage)}</th>
+                  <th style={{...styles.th, ...styles.textRight}}>{getUIText('economy', appLanguage)}</th>
                 </tr>
               </thead>
               <tbody>
                 {activeBowler ? (
-                  <tr style={styles.activeRow}>
+                  <tr style={styles.tr}>
                     <td 
-                      onClick={() => onPlayerClick(activeBowler.id)} 
-                      style={styles.playerLink}
+                      style={styles.tdPlayerLink}
+                      onClick={() => onPlayerClick && onPlayerClick(activeBowler.id)}
                     >
                       {activeBowler.name}
                     </td>
@@ -278,17 +263,19 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
           </div>
         </div>
 
-        {/* Win Probability Bar */}
+        {/* Win Probability Bar with Official Team Flags */}
         {winProbability !== undefined && match.team1 && match.team2 && (
           <div style={styles.probCard} className="glass-card">
             <div style={styles.probLabelRow}>
-              <span style={{ fontWeight: '700', color: match.team1.color || 'var(--teal)' }}>
+              <span style={{ fontWeight: '700', color: match.team1.color || 'var(--teal)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <TeamFlag team={match.team1} size={18} />
                 {match.team1.shortName || match.team1.name || 'T1'} ({winProbability}%)
               </span>
               <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
                 {getUIText('winProbability', appLanguage)}
               </span>
-              <span style={{ fontWeight: '700', color: match.team2.color || 'var(--amber)' }}>
+              <span style={{ fontWeight: '700', color: match.team2.color || 'var(--amber)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <TeamFlag team={match.team2} size={18} />
                 {match.team2.shortName || match.team2.name || 'T2'} ({100 - winProbability}%)
               </span>
             </div>
@@ -311,246 +298,180 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
           </div>
         )}
 
-        {/* ─── AI COMMENTARY CARD ─── */}
-        <div className="glass-card ai-comm-card">
-          {/* Header with Title, Quick Language Pill, Audio and 3-Dot Settings Toggle */}
-          <div style={styles.commHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <div className="ai-comm-badge">
-                <Sparkles size={13} />
-                <span>{appLanguage === 'hi' ? 'एआई कमेंट्री' : 'AI Commentary'}</span>
+        {/* ─── GOOGLE GEMINI AI COMMENTARY CARD (TEXT-ONLY) ─── */}
+        <div className="glass-card gemini-comm-card" style={styles.geminiCard}>
+          {/* Header */}
+          <div style={styles.geminiHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={styles.geminiBadge}>
+                <Bot size={16} color="#34d399" />
+                <span style={{ fontWeight: '800', letterSpacing: '0.02em' }}>
+                  GOOGLE GEMINI AI
+                </span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.8, color: '#38bdf8' }}>
+                  2.0 FLASH
+                </span>
               </div>
 
-              {/* Quick Language Toggle Pill (English or Hindi) */}
+              {/* Language Pill */}
               <button
                 type="button"
-                onClick={() => handleLangChange(selectedLang === 'en' ? 'hi' : 'en')}
-                className="ai-lang-quick-btn"
-                title={`Current: ${currentLangObj.name}. Click to switch to ${selectedLang === 'en' ? 'Hindi (हिंदी)' : 'English'}`}
+                onClick={() => onLanguageChange && onLanguageChange(selectedLang === 'en' ? 'hi' : 'en')}
+                style={styles.langPill}
+                title="Switch Language"
               >
-                <span>{currentLangObj.flag}</span>
-                <span>{currentLangObj.label}</span>
-                <span style={{ fontSize: '0.72rem', opacity: 0.7 }}>({currentLangObj.name})</span>
-                <span style={{ fontSize: '0.65rem', marginLeft: '2px', color: 'var(--emerald)' }}>⇄</span>
+                <span>{selectedLang === 'en' ? '🌐 English' : '🇮🇳 हिंदी'}</span>
+                <span style={{ color: 'var(--emerald)', fontSize: '0.75rem' }}>⇄</span>
               </button>
             </div>
 
-            {/* Master Audio Action Controls & 3-Dot Button */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {/* Master Play/Stop Latest */}
-              <button
-                type="button"
-                onClick={handleSpeakLatest}
-                style={{
-                  ...styles.ctrlBtn,
-                  background: activeSpeakingBall ? 'rgba(239, 68, 68, 0.18)' : 'rgba(16, 185, 129, 0.15)',
-                  borderColor: activeSpeakingBall ? 'var(--red-accent)' : 'var(--emerald)',
-                  color: activeSpeakingBall ? '#fff' : 'var(--emerald)',
-                }}
-                title={activeSpeakingBall ? (appLanguage === 'hi' ? 'ऑडियो रोकें' : 'Stop voice playback') : (appLanguage === 'hi' ? 'लाइव हिंदी कमेंट्री सुनें' : `Listen in ${currentLangObj.name}`)}
-              >
-                {activeSpeakingBall ? (
-                  <>
-                    <div className="sound-equalizer">
-                      <span className="eq-bar" />
-                      <span className="eq-bar" />
-                      <span className="eq-bar" />
-                      <span className="eq-bar" />
-                    </div>
-                    <span>{getUIText('stop', appLanguage)}</span>
-                  </>
-                ) : (
-                  <>
-                    <Volume2 size={15} />
-                    <span>{getUIText('listenLive', appLanguage)} ({currentLangObj.code.toUpperCase()})</span>
-                  </>
-                )}
-              </button>
-
-              {/* 3-Dot Settings Toggle Button */}
+            {/* Persona and Settings Button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
                 type="button"
                 onClick={() => setShowSettings(!showSettings)}
-                className={`ai-settings-toggle-btn ${showSettings ? 'active' : ''}`}
-                title="Commentary & Voice Settings (Language, Pitch, Speed, Persona)"
+                style={{
+                  ...styles.iconBtn,
+                  background: showSettings ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  borderColor: showSettings ? 'var(--emerald)' : 'rgba(255, 255, 255, 0.1)'
+                }}
+                title="Gemini AI Settings & API Key"
               >
-                <MoreVertical size={16} />
-                {autoSpeak && <span className="ai-settings-active-dot" title="Auto-speak enabled" />}
+                <SlidersHorizontal size={15} />
               </button>
             </div>
           </div>
 
-          {/* ─── Sleek 3-Dot Collapsible Settings Drawer ─── */}
+          {/* Collapsible Gemini Settings Drawer */}
           {showSettings && (
-            <div className="ai-settings-panel">
-              <div className="ai-settings-panel-header">
-                <div className="ai-settings-panel-title">
-                  <SlidersHorizontal size={15} />
-                  <span>{getUIText('settingsTitle', appLanguage)}</span>
-                </div>
+            <div style={styles.settingsDrawer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff' }}>
+                  Gemini Commentary Configuration
+                </span>
                 <button 
-                  type="button"
-                  onClick={() => setShowSettings(false)} 
-                  className="ai-settings-close-btn"
-                  title="Close settings"
+                  type="button" 
+                  onClick={() => setShowSettings(false)}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
                 >
                   <X size={16} />
                 </button>
               </div>
 
-              {/* 1. Language Selection (Strictly English & Hindi) */}
-              <div className="setting-section">
-                <span className="setting-label">{getUIText('languageLabel', appLanguage)}</span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  {SUPPORTED_LANGUAGES.map(lang => (
-                    <button
-                      type="button"
-                      key={lang.code}
-                      onClick={() => handleLangChange(lang.code)}
-                      className={`lang-pill-btn ${selectedLang === lang.code ? 'active' : ''}`}
-                      style={{ justifyContent: 'center', padding: '8px 12px' }}
-                    >
-                      <span style={{ fontSize: '1.05rem' }}>{lang.flag}</span>
-                      <span style={{ fontWeight: '700' }}>{lang.label}</span>
-                      <span style={{ fontSize: '0.72rem', opacity: 0.7 }}>({lang.name})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 2. Voice Pitch & Speed */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-                {/* Voice Speed */}
-                <div className="setting-section">
-                  <span className="setting-label">{getUIText('voiceSpeed', appLanguage)}</span>
-                  <div className="segmented-control">
-                    {[0.8, 1.0, 1.2, 1.5].map(speed => (
-                      <button
-                        type="button"
-                        key={speed}
-                        onClick={() => setSpeechRate(speed)}
-                        className={`segment-item-btn ${speechRate === speed ? 'active' : ''}`}
-                      >
-                        {speed}x
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Voice Pitch */}
-                <div className="setting-section">
-                  <span className="setting-label">{getUIText('voicePitch', appLanguage)}</span>
-                  <div className="segmented-control">
-                    {[
-                      { val: 0.8, label: getUIText('deep', appLanguage) },
-                      { val: 1.0, label: getUIText('normal', appLanguage) },
-                      { val: 1.2, label: getUIText('high', appLanguage) }
-                    ].map(pitch => (
-                      <button
-                        type="button"
-                        key={pitch.val}
-                        onClick={() => setSpeechPitch(pitch.val)}
-                        className={`segment-item-btn ${speechPitch === pitch.val ? 'active' : ''}`}
-                      >
-                        {pitch.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Auto-Speak Live Balls Toggle */}
-              <div className="toggle-switch-row">
-                <div className="switch-label-group">
-                  <span className="switch-main-text">{getUIText('autoSpeak', appLanguage)}</span>
-                  <span className="switch-sub-text">
-                    {appLanguage === 'hi' ? 'हर गेंद का हिंदी में लाइव वाचन करें' : 'Automatically announce each ball in English'}
-                  </span>
-                </div>
-                <div 
-                  onClick={handleToggleAutoSpeak}
-                  className={`switch-ui ${autoSpeak ? 'on' : ''}`}
-                  role="switch"
-                  aria-checked={autoSpeak}
-                  title="Toggle automatic speech on new balls"
-                >
-                  <span className="switch-knob" />
-                </div>
-              </div>
-
-              {/* 4. Commentary Persona / Style */}
-              <div className="setting-section">
-                <span className="setting-label">{getUIText('commentaryStyle', appLanguage)}</span>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {COMMENTARY_PERSONAS.map(p => (
-                    <button
-                      type="button"
-                      key={p.id}
-                      onClick={() => handlePersonaChange(p.id)}
-                      className={`persona-btn ${selectedPersona === p.id ? 'active' : ''}`}
-                      title={p.desc}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 5. English Subtitles Toggle (Only shown when Hindi is selected) */}
-              {selectedLang === 'hi' && (
-                <div className="toggle-switch-row" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '8px' }}>
-                  <div className="switch-label-group">
-                    <span className="switch-main-text">{getUIText('englishSubtitles', appLanguage)}</span>
-                    <span className="switch-sub-text">हिंदी के साथ मूल अंग्रेजी टेक्स्ट भी देखें</span>
-                  </div>
-                  <div 
-                    onClick={() => setShowOriginalEnglish(!showOriginalEnglish)}
-                    className={`switch-ui ${showOriginalEnglish ? 'on' : ''}`}
-                    role="switch"
-                    aria-checked={showOriginalEnglish}
-                    title="Toggle English source subtitles"
+              {/* API Key Input */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', color: '#94a3b8', marginBottom: '4px' }}>
+                  Custom Google Gemini API Key (Optional)
+                </label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                    placeholder="AIzaSy... (Leave empty to use built-in engine)"
+                    style={{
+                      flex: 1,
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      color: '#fff',
+                      fontSize: '0.8rem'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveApiKey}
+                    style={{
+                      background: 'var(--emerald)',
+                      color: '#000',
+                      border: 'none',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
                   >
-                    <span className="switch-knob" />
-                  </div>
+                    {apiKeySaved ? 'Saved!' : 'Save'}
+                  </button>
                 </div>
+                <span style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '3px', display: 'block' }}>
+                  Stored securely in your local browser storage.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Gemini Quick Analysis Chips */}
+          <div style={styles.quickPrompts}>
+            <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '600' }}>
+              Ask Gemini AI:
+            </span>
+            {[
+              { id: 'tactics', label: 'Tactical Blueprint', query: 'What is the bowler and batter tactical blueprint right now?' },
+              { id: 'prediction', label: 'Win Probability Prediction', query: 'Predict the winner and explain the statistical momentum shift.' },
+              { id: 'pitch', label: 'Pitch & Over Breakdown', query: 'How is the surface behaving and what should be the death overs plan?' }
+            ].map(chip => (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => handleAskGemini(chip.query)}
+                style={styles.promptChip}
+              >
+                <Sparkles size={11} color="#34d399" />
+                <span>{chip.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Gemini On-Demand AI Query Box */}
+          <div style={styles.askGeminiRow}>
+            <input
+              type="text"
+              value={customQuestion}
+              onChange={(e) => setCustomQuestion(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAskGemini(customQuestion)}
+              placeholder="Ask Gemini AI anything about this match..."
+              style={styles.queryInput}
+            />
+            <button
+              type="button"
+              onClick={() => handleAskGemini(customQuestion)}
+              disabled={isGeminiThinking}
+              style={styles.sendBtn}
+            >
+              {isGeminiThinking ? (
+                <Sparkles size={14} className="spin-slow" />
+              ) : (
+                <Send size={14} />
               )}
-            </div>
-          )}
+            </button>
+          </div>
 
-          {/* AI Tactical Over Pulse Box */}
-          {aiOverSummary && (
-            <div style={styles.aiInsightBox}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--teal)', fontWeight: '700', fontSize: '0.82rem' }}>
-                <Sparkles size={14} />
-                <span>{aiOverSummary.title}</span>
+          {/* Gemini Answer Banner */}
+          {geminiAnswer && (
+            <div style={styles.geminiAnswerBox}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8', fontSize: '0.78rem', fontWeight: '700' }}>
+                <BrainCircuit size={14} />
+                <span>Gemini Match Intelligence: "{geminiAnswer.question}"</span>
               </div>
-              <p style={{ margin: '4px 0 0 0', fontSize: '0.83rem', color: 'var(--text-primary)', lineHeight: '1.45' }}>
-                {aiOverSummary.content}
+              <p style={{ margin: '6px 0 0 0', fontSize: '0.84rem', color: '#f1f5f9', lineHeight: '1.5' }}>
+                {geminiAnswer.answer}
               </p>
-              <div style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--emerald)', fontStyle: 'italic' }}>
-                {aiOverSummary.tip}
-              </div>
             </div>
           )}
 
-          {/* Ball-by-Ball Feed */}
+          {/* Ball-by-Ball Text Feed */}
           <div style={styles.commFeed}>
-            {commentary.map((comm, idx) => {
-              const regional = generateRegionalBallCommentary(comm, selectedLang, selectedPersona, match);
-              const isSpeakingThis = activeSpeakingBall === comm.ball;
-              const isWicket = regional.category === 'W';
-              const isBoundary = regional.category === '4' || regional.category === '6';
-              const isSix = regional.category === '6';
+            {(geminiCommentaryList.length > 0 ? geminiCommentaryList : commentary).map((comm, idx) => {
+              const isWicket = comm.category === 'W' || String(comm.event).toUpperCase().includes('W');
+              const isBoundary = comm.category === '4' || comm.category === '6';
+              const isSix = comm.category === '6';
 
               return (
-                <div 
-                  key={`${comm.ball}-${idx}`} 
-                  style={{
-                    ...styles.commItem,
-                    ...(isSpeakingThis ? styles.commItemSpeaking : {})
-                  }}
-                >
-                  {/* Meta Row: Ball Number, Event Badge, Speech & Copy Actions */}
+                <div key={`${comm.ball}-${idx}`} style={styles.commItem}>
+                  {/* Meta Bar */}
                   <div style={styles.commMeta}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={styles.commBall}>{comm.ball}</span>
@@ -562,37 +483,24 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
                           ...(isSix ? styles.commSix : {})
                         }}
                       >
-                        {comm.event || (isWicket ? (appLanguage === 'hi' ? 'विकेट' : 'Wicket') : isBoundary ? (isSix ? (appLanguage === 'hi' ? 'छक्का' : '6 runs') : (appLanguage === 'hi' ? 'चौका' : '4 runs')) : (appLanguage === 'hi' ? 'लाइव' : 'Live'))}
+                        {comm.event || (isWicket ? 'WICKET' : isBoundary ? (isSix ? '6 RUNS' : '4 RUNS') : 'LIVE')}
                       </span>
+                      {comm.winShift && (
+                        <span style={styles.winShiftBadge}>
+                          {comm.winShift}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Action buttons on each ball */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                        {comm.source || 'Gemini Flash'}
+                      </span>
                       <button
                         type="button"
-                        onClick={() => handleSpeakBall(comm, regional)}
-                        style={{
-                          ...styles.miniActionBtn,
-                          color: isSpeakingThis ? 'var(--emerald)' : 'var(--text-secondary)'
-                        }}
-                        title={isSpeakingThis ? (appLanguage === 'hi' ? 'रोकें' : 'Stop voice') : (appLanguage === 'hi' ? 'हिंदी में सुनें' : `Listen in ${currentLangObj.name}`)}
-                      >
-                        {isSpeakingThis ? (
-                          <div className="sound-equalizer">
-                            <span className="eq-bar" />
-                            <span className="eq-bar" />
-                            <span className="eq-bar" />
-                          </div>
-                        ) : (
-                          <Volume2 size={13} />
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleCopyCommentary(regional.nativeText, comm.ball)}
+                        onClick={() => handleCopyCommentary(comm.geminiText || comm.text, comm.ball)}
                         style={styles.miniActionBtn}
-                        title={appLanguage === 'hi' ? 'कमेंट्री क्लिपबोर्ड पर कॉपी करें' : 'Copy commentary to clipboard'}
+                        title="Copy commentary text"
                       >
                         {copiedBall === comm.ball ? (
                           <Check size={13} color="var(--emerald)" />
@@ -603,256 +511,332 @@ export default function LiveTab({ match, onPlayerClick, appLanguage = 'en', onLa
                     </div>
                   </div>
 
-                  {/* Written Commentary: English or Hindi based on user selection */}
-                  <div className="comm-native-text">
-                    {regional.nativeText}
-                  </div>
+                  {/* Gemini Commentary Text (Pure Text) */}
+                  <p style={styles.commText}>
+                    {comm.geminiText || comm.text}
+                  </p>
 
-                  {/* Romanized Phonetics (Shown for Hindi to assist pronunciation) */}
-                  {regional.phoneticText && selectedLang === 'hi' && (
-                    <div className="comm-phonetic-text">
-                      "{regional.phoneticText}"
-                    </div>
-                  )}
-
-                  {/* Tactical AI Note */}
-                  {regional.tacticalInsight && (
-                    <div className="comm-tactical-note">
-                      💡 {regional.tacticalInsight}
-                    </div>
-                  )}
-
-                  {/* Optional English Source Display (Only if Hindi selected) */}
-                  {showOriginalEnglish && comm.text && selectedLang === 'hi' && (
-                    <div className="comm-original-text">
-                      English source: {comm.text}
+                  {/* Gemini Tactical Breakdown Card */}
+                  {comm.tactics && (
+                    <div style={styles.tacticalCard}>
+                      <span style={{ color: '#34d399', fontWeight: '700', marginRight: '6px' }}>
+                        Tactical Breakdown:
+                      </span>
+                      <span style={{ color: '#94a3b8' }}>
+                        {comm.tactics.replace('Tactical Insight:', '').replace('Tactical Breakdown:', '').trim()}
+                      </span>
                     </div>
                   )}
                 </div>
               );
             })}
-
-            {commentary.length === 0 && (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                {appLanguage === 'hi' ? 'लाइव बॉल कमेंट्री की प्रतीक्षा की जा रही है...' : 'Waiting for live ball commentary...'}
-              </div>
-            )}
           </div>
         </div>
       </div>
-
-      {/* Pitch Map & Fielding Visual */}
-      <div style={styles.rightCol}>
-        <CricketField lastBall={match.lastBall} />
-      </div>
-
     </div>
   );
 }
 
 const styles = {
-  mainSplit: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-    gap: '1.25rem',
-    alignItems: 'start',
-    width: '100%',
-  },
-  leftCol: {
+  container: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    minWidth: 0,
-    width: '100%',
   },
-  rightCol: {
+  fieldSection: {
+    padding: '0.75rem',
+    borderRadius: '12px',
+    background: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoSection: {
     display: 'flex',
     flexDirection: 'column',
-    height: '100%',
-    minWidth: 0,
-    width: '100%',
-  },
-  gridSection: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
     gap: '1rem',
-    width: '100%',
   },
-  card: {
+  scoreOverview: {
     padding: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    overflowX: 'auto',
-    maxWidth: '100%',
-    boxSizing: 'border-box',
-    WebkitOverflowScrolling: 'touch',
+    borderRadius: '12px',
+    background: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
   },
-  cardTitle: {
-    fontSize: '0.9rem',
-    textTransform: 'uppercase',
-    color: 'var(--emerald)',
-    letterSpacing: '0.05em',
-    fontWeight: '700',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
-    paddingBottom: '6px',
+  tableResponsive: {
+    overflowX: 'auto',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
+    fontSize: '0.85rem',
   },
-  activeRow: {
+  thRow: {
+    borderBottom: '1px solid var(--border-color)',
+  },
+  th: {
+    textAlign: 'left',
+    padding: '0.4rem 0.5rem',
+    color: 'var(--text-muted)',
+    fontWeight: '600',
+    fontSize: '0.75rem',
+    textTransform: 'uppercase',
+  },
+  tr: {
+    borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+  },
+  trActive: {
+    borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
     background: 'rgba(16, 185, 129, 0.04)',
   },
-  playerLink: {
-    color: '#fff',
-    fontWeight: '600',
+  tdPlayerLink: {
+    padding: '0.5rem',
+    color: 'var(--text-primary)',
+    fontWeight: '500',
     cursor: 'pointer',
-    transition: 'color 0.2s',
-  },
-  strikerDot: {
-    color: 'var(--emerald)',
-    fontWeight: '800',
   },
   textRight: {
     textAlign: 'right',
+    padding: '0.5rem',
   },
   recentContainer: {
+    padding: '0.75rem 1rem',
+    borderRadius: '12px',
+    background: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
     display: 'flex',
     alignItems: 'center',
     gap: '1rem',
-    padding: '12px 1.25rem',
-    flexWrap: 'wrap',
   },
   recentLabel: {
-    fontSize: '0.85rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
     color: 'var(--text-secondary)',
+    whiteSpace: 'nowrap',
   },
   ballsList: {
     display: 'flex',
-    gap: '8px',
+    gap: '0.4rem',
+    alignItems: 'center',
+    overflowX: 'auto',
   },
   probCard: {
-    padding: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
+    padding: '0.85rem 1.25rem',
+    borderRadius: '12px',
+    background: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
   },
   probLabelRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: '0.5rem',
+    fontSize: '0.85rem',
   },
   barOuter: {
-    height: '10px',
-    borderRadius: '5px',
+    height: '6px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '3px',
     overflow: 'hidden',
     display: 'flex',
-    background: 'rgba(255,255,255,0.05)',
   },
   barInnerTeam1: {
     height: '100%',
-    transition: 'width 0.5s ease-out',
+    transition: 'width 0.5s ease',
   },
   barInnerTeam2: {
     height: '100%',
-    transition: 'width 0.5s ease-out',
+    transition: 'width 0.5s ease',
   },
-
-  /* Commentary header & controls */
-  commHeader: {
+  geminiCard: {
+    padding: '1.25rem',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(9, 13, 22, 0.98) 100%)',
+    border: '1px solid rgba(16, 185, 129, 0.25)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
+  },
+  geminiHeader: {
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '10px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
-    paddingBottom: '10px',
+    justifyContent: 'space-between',
+    marginBottom: '1rem',
+    paddingBottom: '0.75rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
   },
-  ctrlBtn: {
-    display: 'flex',
+  geminiBadge: {
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '5px 10px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.1)',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
+    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.15))',
+    border: '1px solid rgba(52, 211, 153, 0.4)',
+    color: '#34d399',
+    padding: '4px 10px',
+    borderRadius: '9999px',
+    fontSize: '0.78rem',
   },
-  miniActionBtn: {
-    background: 'rgba(255, 255, 255, 0.05)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '4px',
-    padding: '3px 6px',
+  langPill: {
+    background: 'rgba(255, 255, 255, 0.06)',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '20px',
+    color: '#e2e8f0',
+    padding: '4px 10px',
+    fontSize: '0.75rem',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontWeight: '600',
+  },
+  iconBtn: {
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#94a3b8',
+    padding: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    transition: 'all 0.15s ease',
+    transition: 'all 0.2s',
   },
-  aiInsightBox: {
-    background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(16, 185, 129, 0.04))',
-    border: '1px solid rgba(20, 184, 166, 0.2)',
+  settingsDrawer: {
+    background: 'rgba(0, 0, 0, 0.25)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '10px',
+    padding: '1rem',
+    marginBottom: '1rem',
+  },
+  quickPrompts: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginBottom: '0.85rem',
+  },
+  promptChip: {
+    background: 'rgba(16, 185, 129, 0.08)',
+    border: '1px solid rgba(16, 185, 129, 0.25)',
+    color: '#cbd5e1',
+    padding: '3px 9px',
+    borderRadius: '14px',
+    fontSize: '0.72rem',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    transition: 'all 0.2s',
+  },
+  askGeminiRow: {
+    display: 'flex',
+    gap: '6px',
+    marginBottom: '1rem',
+  },
+  queryInput: {
+    flex: 1,
+    background: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: '8px',
-    padding: '10px 12px',
+    padding: '8px 12px',
+    color: '#fff',
+    fontSize: '0.82rem',
+    outline: 'none',
+  },
+  sendBtn: {
+    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '0 14px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 0 10px rgba(16, 185, 129, 0.3)',
+  },
+  geminiAnswerBox: {
+    background: 'rgba(6, 182, 212, 0.08)',
+    border: '1px solid rgba(6, 182, 212, 0.25)',
+    borderRadius: '10px',
+    padding: '0.85rem 1rem',
+    marginBottom: '1.25rem',
   },
   commFeed: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
-    maxHeight: '480px',
-    overflowY: 'auto',
-    paddingRight: '6px',
+    gap: '0.75rem',
   },
   commItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '10px 12px',
+    padding: '0.9rem 1rem',
+    borderRadius: '10px',
     background: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: '8px',
-    border: '1px solid rgba(255, 255, 255, 0.04)',
-    transition: 'all 0.2s ease',
-  },
-  commItemSpeaking: {
-    background: 'rgba(16, 185, 129, 0.08)',
-    border: '1px solid var(--emerald)',
-    boxShadow: '0 0 12px rgba(16, 185, 129, 0.2)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    transition: 'background 0.2s',
   },
   commMeta: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '2px',
+    marginBottom: '0.45rem',
   },
   commBall: {
-    fontSize: '0.82rem',
+    fontWeight: '800',
+    color: 'var(--text-primary)',
+    fontSize: '0.88rem',
+  },
+  commEvent: {
+    fontSize: '0.7rem',
     fontWeight: '700',
-    color: '#fff',
-    background: 'rgba(255,255,255,0.08)',
+    padding: '2px 7px',
+    borderRadius: '4px',
+    background: 'rgba(255, 255, 255, 0.06)',
+    color: 'var(--text-secondary)',
+  },
+  commBoundary: {
+    background: 'rgba(16, 185, 129, 0.15)',
+    color: 'var(--emerald)',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+  },
+  commSix: {
+    background: 'rgba(245, 158, 11, 0.15)',
+    color: 'var(--amber)',
+    border: '1px solid rgba(245, 158, 11, 0.3)',
+  },
+  commWicket: {
+    background: 'rgba(239, 68, 68, 0.15)',
+    color: 'var(--red-accent)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+  },
+  winShiftBadge: {
+    fontSize: '0.68rem',
+    fontWeight: '600',
+    color: '#38bdf8',
+    background: 'rgba(6, 182, 212, 0.1)',
     padding: '2px 6px',
     borderRadius: '4px',
   },
-  commEvent: {
-    fontSize: '0.72rem',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    color: 'var(--text-secondary)',
-    letterSpacing: '0.04em',
+  commText: {
+    margin: 0,
+    fontSize: '0.86rem',
+    color: '#e2e8f0',
+    lineHeight: '1.5',
   },
-  commWicket: {
-    color: 'var(--red-accent)',
-    fontWeight: '800',
+  tacticalCard: {
+    marginTop: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '6px',
+    background: 'rgba(16, 185, 129, 0.05)',
+    border: '1px solid rgba(16, 185, 129, 0.15)',
+    fontSize: '0.78rem',
+    lineHeight: '1.45',
   },
-  commBoundary: {
-    color: 'var(--teal)',
-    fontWeight: '800',
-  },
-  commSix: {
-    color: 'var(--emerald)',
-    fontWeight: '800',
-  },
+  miniActionBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#94a3b8',
+    cursor: 'pointer',
+    padding: '3px',
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: '4px',
+    transition: 'color 0.15s',
+  }
 };

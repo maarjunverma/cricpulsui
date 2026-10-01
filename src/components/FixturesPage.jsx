@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Award, Clock, ChevronRight, Sparkles } from 'lucide-react';
 import MatchDetailModal from './MatchDetailModal';
+import TeamFlag from './TeamFlag';
 
 export default function FixturesPage({ 
   liveMatches = [], 
@@ -135,11 +136,11 @@ export default function FixturesPage({
                 <span style={styles.venueName}>{match.venue}</span>
               </div>
 
-              {/* Teams & Scores Summary */}
+              {/* Teams & Scores Summary with Official Flags */}
               <div style={styles.teamContainer}>
                 <div style={styles.teamLine}>
                   <div style={styles.teamDetails}>
-                    <div style={{...styles.teamDot, backgroundColor: match.team1?.color || '#00529b'}} />
+                    <TeamFlag team={match.team1} size={22} />
                     <span style={styles.teamName}>{match.team1?.name || match.team1?.shortName}</span>
                   </div>
                   {/* Show scores if match started/finished */}
@@ -153,7 +154,7 @@ export default function FixturesPage({
 
                 <div style={styles.teamLine}>
                   <div style={styles.teamDetails}>
-                    <div style={{...styles.teamDot, backgroundColor: match.team2?.color || '#ffcd00'}} />
+                    <TeamFlag team={match.team2} size={22} />
                     <span style={styles.teamName}>{match.team2?.name || match.team2?.shortName}</span>
                   </div>
                   {/* Show scores if match started/finished */}

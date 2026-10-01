@@ -5,6 +5,7 @@ import AnalyticsTab from './AnalyticsTab';
 import FantasyTab from './FantasyTab';
 import { MapPin, Users, Info } from 'lucide-react';
 import { getUIText } from '../services/translations';
+import TeamFlag from './TeamFlag';
 
 
 export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', onLanguageChange }) {
@@ -112,9 +113,7 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
               {isUpcoming ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '0.75rem', padding: '0.25rem 0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ ...styles.teamAvatar, backgroundColor: team1.color || '#00529b' }}>
-                      {(team1.shortName || team1.name || 'T1').substring(0, 2)}
-                    </div>
+                    <TeamFlag team={team1} size={36} />
                     <div>
                       <span style={styles.teamNameText}>{team1.name || team1.shortName}</span>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{team1.shortName}</div>
@@ -132,18 +131,14 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
                       <span style={styles.teamNameText}>{team2.name || team2.shortName}</span>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{team2.shortName}</div>
                     </div>
-                    <div style={{ ...styles.teamAvatar, backgroundColor: team2.color || '#dc2626' }}>
-                      {(team2.shortName || team2.name || 'T2').substring(0, 2)}
-                    </div>
+                    <TeamFlag team={team2} size={36} />
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
-                  {/* Team 1 Score Block */}
+                  {/* Team 1 Score Block with Official Flag */}
                   <div className="team-score-block" style={styles.teamScoreBlock}>
-                    <div style={{ ...styles.teamAvatar, backgroundColor: team1.color || '#00529b' }}>
-                      {(team1.shortName || team1.name || 'T1').substring(0, 2)}
-                    </div>
+                    <TeamFlag team={team1} size={32} />
                     <span style={styles.teamNameText}>{team1.shortName || team1.name}</span>
                     <span className="score-value-text" style={styles.scoreValue}>
                       {score.team1 ? `${t1Runs}-${t1Wkts}` : (isFinished ? '—' : `${t1Runs}-${t1Wkts}`)}
@@ -153,12 +148,10 @@ export default function MatchCenter({ match, onPlayerClick, appLanguage = 'en', 
                     )}
                   </div>
 
-                  {/* Team 2 Score Block (shown for finished matches or 2nd innings) */}
+                  {/* Team 2 Score Block with Official Flag */}
                   {(score.team2 || isFinished || innings === 2) && (
                     <div className="team-score-block" style={styles.teamScoreBlock}>
-                      <div style={{ ...styles.teamAvatar, backgroundColor: team2.color || '#dc2626' }}>
-                        {(team2.shortName || team2.name || 'T2').substring(0, 2)}
-                      </div>
+                      <TeamFlag team={team2} size={32} />
                       <span style={styles.teamNameText}>{team2.shortName || team2.name}</span>
                       <span className="score-value-text" style={styles.scoreValue}>
                         {score.team2 ? `${t2Runs}-${t2Wkts}` : 'Yet to bat'}

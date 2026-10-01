@@ -18,6 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { getEnrichedMatchDetails } from '../services/matchDetailsHelper';
+import TeamFlag from './TeamFlag';
 
 export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerClick }) {
   if (!match) return null;
@@ -92,9 +93,7 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
           <div style={styles.teamsRow}>
             {/* Team 1 */}
             <div style={styles.teamCol}>
-              <div style={{ ...styles.teamFlagCircle, backgroundColor: team1.color }}>
-                {team1.shortName?.slice(0, 3) || 'T1'}
-              </div>
+              <TeamFlag team={team1} size={48} style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.5)', border: '2px solid rgba(255,255,255,0.2)' }} />
               <span style={styles.teamNameText}>{team1.name}</span>
               {match.score?.team1 && (
                 <span style={styles.teamScoreText}>
@@ -128,9 +127,7 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
 
             {/* Team 2 */}
             <div style={styles.teamCol}>
-              <div style={{ ...styles.teamFlagCircle, backgroundColor: team2.color }}>
-                {team2.shortName?.slice(0, 3) || 'T2'}
-              </div>
+              <TeamFlag team={team2} size={48} style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.5)', border: '2px solid rgba(255,255,255,0.2)' }} />
               <span style={styles.teamNameText}>{team2.name}</span>
               {match.score?.team2 && (
                 <span style={styles.teamScoreText}>
@@ -203,7 +200,7 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
                     ...(selectedTeamTab === 'team1' ? { ...styles.squadTeamBtnActive, borderColor: team1.color, color: '#fff' } : {})
                   }}
                 >
-                  <span style={{ ...styles.teamDotSmall, backgroundColor: team1.color }} />
+                  <TeamFlag team={team1} size={16} />
                   {team1.name} ({team1.squad?.length || 11})
                 </button>
                 <button
@@ -213,7 +210,7 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
                     ...(selectedTeamTab === 'team2' ? { ...styles.squadTeamBtnActive, borderColor: team2.color, color: '#fff' } : {})
                   }}
                 >
-                  <span style={{ ...styles.teamDotSmall, backgroundColor: team2.color }} />
+                  <TeamFlag team={team2} size={16} />
                   {team2.name} ({team2.squad?.length || 11})
                 </button>
                 <button
@@ -233,13 +230,16 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
                 {(selectedTeamTab === 'team1' || selectedTeamTab === 'both') && (
                   <div style={styles.squadColCard}>
                     <div style={{ ...styles.squadColHeader, borderLeftColor: team1.color }}>
-                      <div>
-                        <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700' }}>
-                          {team1.name}
-                        </h4>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          Captain: {team1.captain} • Keeper: {team1.wicketKeeper}
-                        </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <TeamFlag team={team1} size={26} />
+                        <div>
+                          <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700' }}>
+                            {team1.name}
+                          </h4>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            Captain: {team1.captain} • Keeper: {team1.wicketKeeper}
+                          </span>
+                        </div>
                       </div>
                       <span style={{ ...styles.squadCountBadge, background: `${team1.color}25`, color: team1.color }}>
                         {team1.squad?.length} Players
@@ -320,13 +320,16 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
                 {(selectedTeamTab === 'team2' || selectedTeamTab === 'both') && (
                   <div style={styles.squadColCard}>
                     <div style={{ ...styles.squadColHeader, borderLeftColor: team2.color }}>
-                      <div>
-                        <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700' }}>
-                          {team2.name}
-                        </h4>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          Captain: {team2.captain} • Keeper: {team2.wicketKeeper}
-                        </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <TeamFlag team={team2} size={26} />
+                        <div>
+                          <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: '700' }}>
+                            {team2.name}
+                          </h4>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            Captain: {team2.captain} • Keeper: {team2.wicketKeeper}
+                          </span>
+                        </div>
                       </div>
                       <span style={{ ...styles.squadCountBadge, background: `${team2.color}25`, color: team2.color }}>
                         {team2.squad?.length} Players
@@ -502,13 +505,15 @@ export default function MatchDetailModal({ match, onClose, onGoToLive, onPlayerC
 
                 <div style={styles.h2hBarContainer}>
                   <div style={styles.h2hStatsRow}>
-                    <span style={{ color: team1.color, fontWeight: '700' }}>
+                    <span style={{ color: team1.color, fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <TeamFlag team={team1} size={16} />
                       {team1.shortName}: {headToHead.team1Wins} Wins
                     </span>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
                       Total {headToHead.total} Played ({headToHead.noResult} NR)
                     </span>
-                    <span style={{ color: team2.color, fontWeight: '700' }}>
+                    <span style={{ color: team2.color, fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <TeamFlag team={team2} size={16} />
                       {team2.shortName}: {headToHead.team2Wins} Wins
                     </span>
                   </div>

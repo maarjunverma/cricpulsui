@@ -1,0 +1,21 @@
+{
+  "name": "CricAi - Live Cricket Score & AI Commentary",
+  "short_name": "CricAi",
+  "description": "Fastest live cricket scores, ball-by-ball AI commentary, IPL matches, and tournament statistics.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060b13",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/cricpuls-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import { Users } from 'lucide-react';
 export default function TeamsPage({ onPlayerClick }) {
   return (
     <div style={styles.container} className="fade-in">
-      <h2 style={styles.title}>CricAi Teams &amp; Squads</h2>
+      <h2 style={styles.title}>CricPuls Teams &amp; Squads</h2>
 
       <div style={styles.emptyState}>
         <Users size={56} style={{ opacity: 0.25, marginBottom: '1rem', color: 'var(--teal)' }} />

@@ -1,24 +1,26 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Activity, Calendar, Users, Award, Zap, Play, Pause, RefreshCw, Volume2, VolumeX, ChevronRight, ChevronLeft, ChevronDown, Menu, X, Trophy, Newspaper } from 'lucide-react';
+import { Activity, Calendar, Users, Award, Zap, Play, Pause, RefreshCw, Volume2, VolumeX, ChevronRight, ChevronLeft, Menu, X, Trophy, Newspaper } from 'lucide-react';
 import { getUIText } from '../services/translations';
+import CricPulsLogo from './CricPulsLogo';
+import TeamFlag from './TeamFlag';
 
 
 export default function Header({ 
   currentTab, 
   setCurrentTab, 
-  fixturesSubTab,
+  _fixturesSubTab,
   setFixturesSubTab,
   liveMatches = [], 
   fixtures = [],
   selectedMatchId, 
   setSelectedMatchId,
-  simSpeed,
-  setSimSpeed,
-  onResetMatches,
-  isMuted,
-  onToggleMute,
-  appMode,
-  onToggleMode,
+  _simSpeed,
+  _setSimSpeed,
+  _onResetMatches,
+  _isMuted,
+  _onToggleMute,
+  _appMode,
+  _onToggleMode,
   appLanguage = 'en',
   onLanguageChange
 }) {
@@ -251,15 +253,9 @@ export default function Header({
     {/* ─── Sticky App Header (Top Navbar) ─── */}
     <header className="app-header-sticky" style={styles.headerSticky}>
       <div style={styles.navInner} className="full-width-inner">
-          {/* Logo */}
+          {/* Official CricPuls Logo */}
           <div style={styles.logoContainer} onClick={() => { setCurrentTab('live'); setMobileMenuOpen(false); }}>
-            <div style={styles.logoIcon}>
-              <Zap size={22} color="#10b981" />
-            </div>
-            <span style={styles.logoText} className="logo-text">
-              CRIC<span style={styles.logoHighlight}>AI</span>
-            </span>
-            <span className="brand-ai-badge">AI 2.0</span>
+            <CricPulsLogo variant="full" size={38} animated={true} />
           </div>
 
           {/* Desktop Nav Links */}
@@ -428,8 +424,12 @@ export default function Header({
                     }}
                     title={`${match.team1?.name || match.team1?.shortName} vs ${match.team2?.name || match.team2?.shortName}`}
                   >
-                    <span style={styles.tickerTeamText}>
-                      {match.team1?.shortName || match.team1?.name} vs {match.team2?.shortName || match.team2?.name}
+                    <span style={{ ...styles.tickerTeamText, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <TeamFlag team={match.team1} size={14} />
+                      <span>{match.team1?.shortName || match.team1?.name}</span>
+                      <span style={{ opacity: 0.6, fontSize: '0.7rem' }}>vs</span>
+                      <TeamFlag team={match.team2} size={14} />
+                      <span>{match.team2?.shortName || match.team2?.name}</span>
                     </span>
                     <span style={styles.tickerDot}>•</span>
                     <span style={{
@@ -564,10 +564,10 @@ export default function Header({
                         {match.venue}
                       </div>
 
-                      {/* Team Scores / Names */}
+                      {/* Team Scores / Names with Official Flags */}
                       <div style={styles.teamRow}>
                         <div style={styles.teamInfo}>
-                          <div style={{ ...styles.teamDot, backgroundColor: match.team1?.color || '#00529b' }} />
+                          <TeamFlag team={match.team1} size={20} />
                           <span style={styles.teamShortName}>{match.team1?.shortName || match.team1?.name}</span>
                         </div>
                         <span style={styles.teamScoreVal}>
@@ -583,7 +583,7 @@ export default function Header({
                       </div>
                       <div style={styles.teamRow}>
                         <div style={styles.teamInfo}>
-                          <div style={{ ...styles.teamDot, backgroundColor: match.team2?.color || '#ffcd00' }} />
+                          <TeamFlag team={match.team2} size={20} />
                           <span style={styles.teamShortName}>{match.team2?.shortName || match.team2?.name}</span>
                         </div>
                         <span style={styles.teamScoreVal}>
